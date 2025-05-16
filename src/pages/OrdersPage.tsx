@@ -12,6 +12,7 @@ export function OrdersPage() {
     type: 'dine-in' as const,
     tableNumber: '',
     items: [] as { menuItem: MenuItem; quantity: number; cookingPreference?: string }[],
+    note: '',
     deliveryInfo: {
       customerName: '',
       address: '',
@@ -114,6 +115,7 @@ export function OrdersPage() {
       type: 'dine-in',
       tableNumber: '',
       items: [],
+      note: '',
       deliveryInfo: {
         customerName: '',
         address: '',
@@ -164,6 +166,11 @@ export function OrdersPage() {
                   )}
                   {order.waiter && (
                     <p className="text-sm text-gray-600">Mesero: {order.waiter}</p>
+                  )}
+                  {order.note && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      <span className="font-medium">Nota:</span> {order.note}
+                    </p>
                   )}
                 </div>
                 <div className="flex flex-col items-end gap-2">
@@ -375,6 +382,19 @@ export function OrdersPage() {
                   </div>
                 </div>
               )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nota del pedido
+              </label>
+              <textarea
+                className="w-full px-3 py-2 border rounded-md"
+                value={newOrder.note}
+                onChange={(e) => setNewOrder(prev => ({ ...prev, note: e.target.value }))}
+                placeholder="Especificaciones especiales del cliente..."
+                rows={3}
+              />
             </div>
 
             <DialogFooter>

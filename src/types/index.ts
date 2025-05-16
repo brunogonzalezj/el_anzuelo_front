@@ -1,3 +1,5 @@
+import type { ClassValue } from 'clsx';
+
 export type Role = 'admin' | 'cashier' | 'chef' | 'messeur';
 
 export interface User {
@@ -47,6 +49,7 @@ export interface Order {
   status: 'pending' | 'preparing' | 'ready' | 'delivered';
   total: number;
   type: 'dine-in' | 'delivery';
+  note?: string;
   deliveryInfo?: {
     customerName: string;
     address: string;
