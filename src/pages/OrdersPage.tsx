@@ -317,15 +317,10 @@ export function OrdersPage() {
                   <button
                     key={item.id}
                     type="button"
-                    className="flex items-center p-2 border rounded-lg hover:bg-gray-50"
+                    className="flex items-center p-4 border rounded-lg hover:bg-gray-50"
                     onClick={() => handleAddItem(item)}
                   >
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                    <div className="ml-2">
+                    <div>
                       <div className="font-medium">{item.name}</div>
                       <div className="text-sm text-gray-600">Bs. {item.price}</div>
                     </div>
