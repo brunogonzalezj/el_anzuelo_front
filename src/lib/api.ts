@@ -28,8 +28,35 @@ const mockUsers = [
   },
 ] as const;
 
+// Mock extras for testing
+const mockExtras: Extra[] = [
+  {
+    id: '1',
+    name: 'Extra queso',
+    price: 5,
+    description: 'Porción adicional de queso',
+    category: 'dairy',
+    available: true
+  },
+  {
+    id: '2',
+    name: 'Papas fritas',
+    price: 8,
+    description: 'Porción de papas fritas',
+    category: 'sides',
+    available: true
+  },
+  {
+    id: '3',
+    name: 'Salsa especial',
+    price: 3,
+    description: 'Salsa de la casa',
+    category: 'sauces',
+    available: true
+  }
+];
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const EXTRAS_API_URL = 'https://api.extras.example.com'; // Replace with actual API URL
 
 const headers = () => ({
   'Content-Type': 'application/json',
@@ -99,32 +126,40 @@ export const api: ApiEndpoints = {
   },
   extras: {
     getAll: async () => {
-      const response = await fetch(`${EXTRAS_API_URL}/extras`, {
-        headers: headers(),
-      });
-      return response.json();
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return mockExtras;
     },
     create: async (extra: Omit<Extra, 'id'>) => {
-      const response = await fetch(`${EXTRAS_API_URL}/extras`, {
-        method: 'POST',
-        headers: headers(),
-        body: JSON.stringify(extra),
-      });
-      return response.json();
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      
+      const newExtra: Extra = {
+        ...extra,
+        id: Math.random().toString(36).substr(2, 9)
+      };
+      
+      mockExtras.push(newExtra);
+      return newExtra;
     },
     update: async (id: string, extra: Partial<Extra>) => {
-      const response = await fetch(`${EXTRAS_API_URL}/extras/${id}`, {
-        method: 'PUT',
-        headers: headers(),
-        body: JSON.stringify(extra),
-      });
-      return response.json();
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      
+      const index = mockExtras.findIndex(e => e.id === id);
+      if (index === -1) throw new Error('Extra not found');
+      
+      mockExtras[index] = { ...mockExtras[index], ...extra };
+      return mockExtras[index];
     },
     delete: async (id: string) => {
-      await fetch(`${EXTRAS_API_URL}/extras/${id}`, {
-        method: 'DELETE',
-        headers: headers(),
-      });
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      
+      const index = mockExtras.findIndex(e => e.id === id);
+      if (index === -1) throw new Error('Extra not found');
+      
+      mockExtras.splice(index, 1);
     },
   },
   orders: {
