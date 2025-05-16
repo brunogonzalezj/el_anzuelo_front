@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { MenuItem, Order, Table, User, Role } from '../types';
+import type { MenuItem, Order, Table, User, Role, Extra } from '../types';
 import { api } from '../lib/api';
 
 interface AuthState {
@@ -16,6 +16,14 @@ interface MenuState {
   addMenuItem: (item: Omit<MenuItem, 'id'>) => Promise<void>;
   updateMenuItem: (id: string, item: Partial<MenuItem>) => Promise<void>;
   removeMenuItem: (id: string) => Promise<void>;
+}
+
+interface ExtrasState {
+  extras: Extra[];
+  fetchExtras: () => Promise<void>;
+  addExtra: (extra: Omit<Extra, 'id'>) => Promise<void>;
+  updateExtra: (id: string, extra: Partial<Extra>) => Promise<void>;
+  removeExtra: (id: string) => Promise<void>;
 }
 
 interface OrderState {
@@ -40,7 +48,7 @@ interface UserState {
   removeUser: (id: string) => Promise<void>;
 }
 
-interface Store extends AuthState, MenuState, OrderState, TableState, UserState {
+interface Store extends AuthState, MenuState, ExtrasState, OrderState, TableState, UserState {
   hasAccess: (allowedRoles: Role[]) => boolean;
 }
 
@@ -81,6 +89,31 @@ export const useStore = create<Store>()(
         await api.menu.delete(id);
         set((state) => ({
           menu: state.menu.filter((item) => item.id !== id),
+        }));
+      },
+
+      // Extras State
+      extras: [],
+      fetchExtras: async () => {
+        const extras = await api.extras.getAll();
+        set({ extras });
+      },
+      addExtra: async (extra) => {
+        const newExtra = await api.extras.create(extra);
+        set((state) => ({ extras: [...state.extras, newExtra] }));
+      },
+      updateExtra: async (id, extra) => {
+        const updatedExtra = await api.extras.update(id, extra);
+        set((state) => ({
+          extras: state.extras.map((item) =>
+            item.id === id ? updatedExtra : item
+          ),
+        }));
+      },
+      removeExtra: async (id) => {
+        await api.extras.delete(id);
+        set((state) => ({
+          extras: state.extras.filter((item) => item.id !== id),
         }));
       },
 

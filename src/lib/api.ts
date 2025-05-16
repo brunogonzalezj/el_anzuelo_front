@@ -1,4 +1,4 @@
-import { ApiEndpoints, AuthResponse, MenuItem, Order, Table, User } from '../types';
+import { ApiEndpoints, AuthResponse, MenuItem, Order, Table, User, Extra } from '../types';
 
 // Mock users for testing
 const mockUsers = [
@@ -29,6 +29,7 @@ const mockUsers = [
 ] as const;
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const EXTRAS_API_URL = 'https://api.extras.example.com'; // Replace with actual API URL
 
 const headers = () => ({
   'Content-Type': 'application/json',
@@ -91,6 +92,36 @@ export const api: ApiEndpoints = {
     },
     delete: async (id) => {
       await fetch(`${API_URL}/menu/${id}`, {
+        method: 'DELETE',
+        headers: headers(),
+      });
+    },
+  },
+  extras: {
+    getAll: async () => {
+      const response = await fetch(`${EXTRAS_API_URL}/extras`, {
+        headers: headers(),
+      });
+      return response.json();
+    },
+    create: async (extra: Omit<Extra, 'id'>) => {
+      const response = await fetch(`${EXTRAS_API_URL}/extras`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify(extra),
+      });
+      return response.json();
+    },
+    update: async (id: string, extra: Partial<Extra>) => {
+      const response = await fetch(`${EXTRAS_API_URL}/extras/${id}`, {
+        method: 'PUT',
+        headers: headers(),
+        body: JSON.stringify(extra),
+      });
+      return response.json();
+    },
+    delete: async (id: string) => {
+      await fetch(`${EXTRAS_API_URL}/extras/${id}`, {
         method: 'DELETE',
         headers: headers(),
       });

@@ -8,6 +8,15 @@ export interface User {
   active: boolean;
 }
 
+export interface Extra {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  category: string;
+  available: boolean;
+}
+
 export interface MenuItem {
   id: string;
   name: string;
@@ -16,6 +25,7 @@ export interface MenuItem {
   category: 'fried' | 'grill' | 'oven' | 'drinks' | 'extras' | 'kids';
   image: string;
   sides?: string[];
+  extras?: Extra[];
 }
 
 export interface Table {
@@ -34,6 +44,7 @@ export interface Order {
     menuItem: MenuItem;
     quantity: number;
     cookingPreference?: string;
+    selectedExtras?: Extra[];
   }[];
   status: 'pending' | 'preparing' | 'ready' | 'delivered';
   total: number;
@@ -69,6 +80,12 @@ export interface ApiEndpoints {
     getAll: () => Promise<MenuItem[]>;
     create: (item: Omit<MenuItem, 'id'>) => Promise<MenuItem>;
     update: (id: string, item: Partial<MenuItem>) => Promise<MenuItem>;
+    delete: (id: string) => Promise<void>;
+  };
+  extras: {
+    getAll: () => Promise<Extra[]>;
+    create: (extra: Omit<Extra, 'id'>) => Promise<Extra>;
+    update: (id: string, extra: Partial<Extra>) => Promise<Extra>;
     delete: (id: string) => Promise<void>;
   };
   orders: {
