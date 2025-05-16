@@ -1,21 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Clock, Check, ChefHat, Truck, Plus, Minus } from 'lucide-react';
+import { mockOrders, mockMenuItems, mockTables } from '../data/mockData';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
-import { useStore } from '../store/useStore';
-import type { MenuItem, Extra, Order } from '../types';
+import type { Order, MenuItem } from '../types';
 
 export function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState(mockOrders);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const menuItems = useStore((state) => state.menu);
-  const extras = useStore((state) => state.extras);
-  const fetchMenu = useStore((state) => state.fetchMenu);
-  const fetchExtras = useStore((state) => state.fetchExtras);
   const [newOrder, setNewOrder] = useState({
     type: 'dine-in' as const,
     tableNumber: '',
-    items: [] as { menuItem: MenuItem | Extra; quantity: number; cookingPreference?: string }[],
+    items: [] as { menuItem: MenuItem; quantity: number; cookingPreference?: string }[],
     deliveryInfo: {
       customerName: '',
       address: '',
@@ -23,11 +19,6 @@ export function OrdersPage() {
       deliveryFee: 10
     }
   });
-
-  useEffect(() => {
-    fetchMenu();
-    fetchExtras();
-  }, [fetchMenu, fetchExtras]);
 
   const statusMap = {
     pending: { label: 'Pendiente', icon: Clock, color: 'text-yellow-600 bg-yellow-50' },
@@ -60,31 +51,38 @@ export function OrdersPage() {
     setNewOrder(prev => ({ ...prev, type }));
   };
 
-  const handleAddItem = (item: MenuItem | Extra) => {
+  const handleAddItem = (menuItem: MenuItem) => {
     setNewOrder(prev => {
-      const existingItem = prev.items.find(i => i.menuItem.id === item.id);
+      const existingItem = prev.items.find(item => item.menuItem.id === menuItem.id);
       if (existingItem) {
         return {
           ...prev,
-          items: prev.items.map(i =>
-            i.menuItem.id === item.id
-              ? { ...i, quantity: i.quantity + 1 }
-              : i
+          items: prev.items.map(item =>
+            item.menuItem.id === menuItem.id
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
           )
         };
       }
       return {
         ...prev,
-        items: [...prev.items, { menuItem: item, quantity: 1 }]
+        items: [...prev.items, { menuItem, quantity: 1 }]
       };
     });
   };
 
-  const handleQuantityChange = (itemId: string, delta: number) => {
+  const handleRemoveItem = (menuItemId: string) => {
+    setNewOrder(prev => ({
+      ...prev,
+      items: prev.items.filter(item => item.menuItem.id !== menuItemId)
+    }));
+  };
+
+  const handleQuantityChange = (menuItemId: string, delta: number) => {
     setNewOrder(prev => ({
       ...prev,
       items: prev.items.map(item => {
-        if (item.menuItem.id === itemId) {
+        if (item.menuItem.id === menuItemId) {
           const newQuantity = item.quantity + delta;
           return newQuantity > 0
             ? { ...item, quantity: newQuantity }
@@ -247,11 +245,13 @@ export function OrdersPage() {
                   required
                 >
                   <option value="">Seleccionar mesa</option>
-                  {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
-                    <option key={num} value={num}>
-                      Mesa {num}
-                    </option>
-                  ))}
+                  {mockTables
+                    .filter(table => table.status === 'available')
+                    .map(table => (
+                      <option key={table.id} value={table.number}>
+                        Mesa {table.number} - Sector {table.sector}
+                      </option>
+                    ))}
                 </select>
               </div>
             ) : (
@@ -311,50 +311,25 @@ export function OrdersPage() {
             )}
 
             <div>
-              <h3 className="font-medium mb-4">Agregar Items</h3>
-              
-              {/* Platos */}
-              <div className="mb-6">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Platos</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  {menuItems.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-                      onClick={() => handleAddItem(item)}
-                    >
-                      <div>
-                        <div className="font-medium">{item.name}</div>
-                        <div className="text-sm text-gray-600">Bs. {item.price}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Acompañamientos */}
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Acompañamientos</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  {extras.map((extra) => (
-                    <button
-                      key={extra.id}
-                      type="button"
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-                      onClick={() => handleAddItem(extra)}
-                    >
-                      <div>
-                        <div className="font-medium">{extra.name}</div>
-                        <div className="text-sm text-gray-600">Bs. {extra.price}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+              <h3 className="font-medium mb-2">Agregar Items</h3>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                {mockMenuItems.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className="flex items-center p-4 border rounded-lg hover:bg-gray-50"
+                    onClick={() => handleAddItem(item)}
+                  >
+                    <div>
+                      <div className="font-medium">{item.name}</div>
+                      <div className="text-sm text-gray-600">Bs. {item.price}</div>
+                    </div>
+                  </button>
+                ))}
               </div>
 
               {newOrder.items.length > 0 && (
-                <div className="border rounded-lg p-4 mt-6">
+                <div className="border rounded-lg p-4">
                   <h4 className="font-medium mb-2">Items Seleccionados</h4>
                   <div className="space-y-2">
                     {newOrder.items.map((item) => (
