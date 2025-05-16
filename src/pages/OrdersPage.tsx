@@ -9,9 +9,11 @@ export function OrdersPage() {
   const orders = useStore((state) => state.orders);
   const menuItems = useStore((state) => state.menu);
   const extras = useStore((state) => state.extras);
+  const tables = useStore((state) => state.tables);
   const fetchOrders = useStore((state) => state.fetchOrders);
   const fetchMenu = useStore((state) => state.fetchMenu);
   const fetchExtras = useStore((state) => state.fetchExtras);
+  const fetchTables = useStore((state) => state.fetchTables);
   const addOrder = useStore((state) => state.addOrder);
   const updateOrderStatus = useStore((state) => state.updateOrderStatus);
   
@@ -32,7 +34,8 @@ export function OrdersPage() {
     fetchOrders();
     fetchMenu();
     fetchExtras();
-  }, [fetchOrders, fetchMenu, fetchExtras]);
+    fetchTables();
+  }, [fetchOrders, fetchMenu, fetchExtras, fetchTables]);
 
   const statusMap = {
     pending: { label: 'Pendiente', icon: Clock, color: 'text-yellow-600 bg-yellow-50' },
@@ -292,11 +295,13 @@ export function OrdersPage() {
                   required
                 >
                   <option value="">Seleccionar mesa</option>
-                  {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
-                    <option key={num} value={num}>
-                      Mesa {num}
-                    </option>
-                  ))}
+                  {tables
+                    .filter(table => table.status === 'available')
+                    .map(table => (
+                      <option key={table.id} value={table.number}>
+                        Mesa {table.number} - Sector {table.sector}
+                      </option>
+                    ))}
                 </select>
               </div>
             ) : (
