@@ -105,6 +105,31 @@ const mockOrders: Order[] = [
   }
 ];
 
+// Mock tables for testing
+const mockTables: Table[] = [
+  {
+    id: '1',
+    number: 1,
+    capacity: 4,
+    status: 'available',
+    currentOrder: null
+  },
+  {
+    id: '2',
+    number: 2,
+    capacity: 6,
+    status: 'occupied',
+    currentOrder: mockOrders[0]
+  },
+  {
+    id: '3',
+    number: 3,
+    capacity: 2,
+    status: 'available',
+    currentOrder: null
+  }
+];
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const headers = () => ({
@@ -260,18 +285,19 @@ export const api: ApiEndpoints = {
   },
   tables: {
     getAll: async () => {
-      const response = await fetch(`${API_URL}/tables`, {
-        headers: headers(),
-      });
-      return response.json();
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return mockTables;
     },
-    update: async (id, table) => {
-      const response = await fetch(`${API_URL}/tables/${id}`, {
-        method: 'PUT',
-        headers: headers(),
-        body: JSON.stringify(table),
-      });
-      return response.json();
+    update: async (id: string, table: Partial<Table>) => {
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      
+      const index = mockTables.findIndex(t => t.id === id);
+      if (index === -1) throw new Error('Table not found');
+      
+      mockTables[index] = { ...mockTables[index], ...table };
+      return mockTables[index];
     },
   },
   users: {
