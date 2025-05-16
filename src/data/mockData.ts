@@ -8,7 +8,7 @@ export const mockMenuItems: MenuItem[] = [
     price: 45,
     category: 'fried',
     image: 'https://images.unsplash.com/photo-1544816155-12df9643f363',
-    sides: ['Arroz', 'Ensalada', 'Plátanos']
+    extras: ['Arroz', 'Ensalada', 'Plátanos']
   },
   {
     id: '2',
@@ -17,7 +17,7 @@ export const mockMenuItems: MenuItem[] = [
     price: 85,
     category: 'grill',
     image: 'https://images.unsplash.com/photo-1559847844-5315695dadae',
-    sides: ['Papas', 'Chimichurri', 'Vegetales']
+    extras: ['Papas', 'Chimichurri', 'Vegetales']
   },
   {
     id: '3',
@@ -26,7 +26,7 @@ export const mockMenuItems: MenuItem[] = [
     price: 35,
     category: 'oven',
     image: 'https://images.unsplash.com/photo-1585545335512-777d0f9f6131',
-    sides: ['Pan al Ajo', 'Limón']
+    extras: ['Pan al Ajo', 'Limón']
   },
   {
     id: '4',
@@ -34,7 +34,8 @@ export const mockMenuItems: MenuItem[] = [
     description: 'Limonada natural con hierba buena',
     price: 12,
     category: 'drinks',
-    image: 'https://images.unsplash.com/photo-1523371683773-affcb4a7c97f'
+    image: 'https://images.unsplash.com/photo-1523371683773-affcb4a7c97f',
+    extras: []
   },
   {
     id: '5',
@@ -43,7 +44,7 @@ export const mockMenuItems: MenuItem[] = [
     price: 25,
     category: 'kids',
     image: 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58',
-    sides: ['Papas Fritas', 'Salsa de Tomate']
+    extras: ['Papas Fritas', 'Salsa de Tomate']
   }
 ];
 
@@ -53,7 +54,7 @@ export const mockOrders: Order[] = [
     tableNumber: 5,
     waiter: 'Carlos Pérez',
     items: [
-      { menuItem: mockMenuItems[0], quantity: 2, cookingPreference: 'Bien cocido' },
+      { menuItem: mockMenuItems[0], quantity: 2, cookingPreference: 'Bien cocido', selectedExtras: ['Arroz', 'Ensalada'] },
       { menuItem: mockMenuItems[3], quantity: 2 }
     ],
     status: 'preparing',
@@ -64,7 +65,7 @@ export const mockOrders: Order[] = [
   {
     id: '2',
     items: [
-      { menuItem: mockMenuItems[1], quantity: 1 },
+      { menuItem: mockMenuItems[1], quantity: 1, selectedExtras: ['Papas', 'Chimichurri'] },
       { menuItem: mockMenuItems[3], quantity: 2 }
     ],
     status: 'pending',
