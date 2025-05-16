@@ -1,27 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Clock, Check, ChefHat, Truck, Plus, Minus } from 'lucide-react';
+import { mockOrders, mockMenuItems, mockTables } from '../data/mockData';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
-import { useStore } from '../store/useStore';
-import type { Order, MenuItem, Extra } from '../types';
+import type { Order, MenuItem } from '../types';
 
 export function OrdersPage() {
-  const orders = useStore((state) => state.orders);
-  const menuItems = useStore((state) => state.menu);
-  const extras = useStore((state) => state.extras);
-  const tables = useStore((state) => state.tables);
-  const fetchOrders = useStore((state) => state.fetchOrders);
-  const fetchMenu = useStore((state) => state.fetchMenu);
-  const fetchExtras = useStore((state) => state.fetchExtras);
-  const fetchTables = useStore((state) => state.fetchTables);
-  const addOrder = useStore((state) => state.addOrder);
-  const updateOrderStatus = useStore((state) => state.updateOrderStatus);
-  
+  const [orders, setOrders] = useState(mockOrders);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newOrder, setNewOrder] = useState({
     type: 'dine-in' as const,
     tableNumber: '',
-    items: [] as { menuItem: MenuItem; quantity: number; cookingPreference?: string; selectedExtras?: string[] }[],
+    items: [] as { menuItem: MenuItem; quantity: number; cookingPreference?: string }[],
     deliveryInfo: {
       customerName: '',
       address: '',
@@ -30,13 +20,6 @@ export function OrdersPage() {
     }
   });
 
-  useEffect(() => {
-    fetchOrders();
-    fetchMenu();
-    fetchExtras();
-    fetchTables();
-  }, [fetchOrders, fetchMenu, fetchExtras, fetchTables]);
-
   const statusMap = {
     pending: { label: 'Pendiente', icon: Clock, color: 'text-yellow-600 bg-yellow-50' },
     preparing: { label: 'Preparando', icon: ChefHat, color: 'text-blue-600 bg-blue-50' },
@@ -44,17 +27,14 @@ export function OrdersPage() {
     delivered: { label: 'Entregado', icon: Truck, color: 'text-gray-600 bg-gray-50' },
   };
 
-  const categories = {
-    fried: 'Fritos',
-    grill: 'Parrilla',
-    oven: 'Horno',
-    drinks: 'Bebidas',
-    extras: 'Extras',
-    kids: 'Menú Anzuelito',
-  };
-
-  const handleStatusChange = async (orderId: string, newStatus: Order['status']) => {
-    await updateOrderStatus(orderId, newStatus);
+  const handleStatusChange = (orderId: string, newStatus: Order['status']) => {
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.id === orderId
+          ? { ...order, status: newStatus }
+          : order
+      )
+    );
   };
 
   const getNextStatus = (currentStatus: Order['status']): Order['status'] | null => {
@@ -86,27 +66,15 @@ export function OrdersPage() {
       }
       return {
         ...prev,
-        items: [...prev.items, { menuItem, quantity: 1, selectedExtras: [] }]
+        items: [...prev.items, { menuItem, quantity: 1 }]
       };
     });
   };
 
-  const handleToggleExtra = (itemIndex: number, extraId: string) => {
+  const handleRemoveItem = (menuItemId: string) => {
     setNewOrder(prev => ({
       ...prev,
-      items: prev.items.map((item, idx) => {
-        if (idx === itemIndex) {
-          const selectedExtras = item.selectedExtras || [];
-          const isSelected = selectedExtras.includes(extraId);
-          return {
-            ...item,
-            selectedExtras: isSelected
-              ? selectedExtras.filter(id => id !== extraId)
-              : [...selectedExtras, extraId]
-          };
-        }
-        return item;
-      })
+      items: prev.items.filter(item => item.menuItem.id !== menuItemId)
     }));
   };
 
@@ -125,28 +93,22 @@ export function OrdersPage() {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const total = newOrder.items.reduce(
-      (sum, item) => {
-        const itemTotal = item.menuItem.price * item.quantity;
-        const extrasTotal = (item.selectedExtras || []).reduce((acc, extraId) => {
-          const extra = extras.find(e => e.id === extraId);
-          return acc + (extra ? extra.price : 0);
-        }, 0);
-        return sum + itemTotal + (extrasTotal * item.quantity);
-      },
+      (sum, item) => sum + item.menuItem.price * item.quantity,
       0
     );
 
-    const orderData: Omit<Order, 'id'> = {
+    const newOrderData: Order = {
+      id: Math.random().toString(36).substr(2, 9),
       ...newOrder,
       status: 'pending',
       total: total + (newOrder.type === 'delivery' ? newOrder.deliveryInfo.deliveryFee : 0),
       createdAt: new Date(),
     };
 
-    await addOrder(orderData);
+    setOrders(prev => [...prev, newOrderData]);
     setIsModalOpen(false);
     setNewOrder({
       type: 'dine-in',
@@ -222,24 +184,12 @@ export function OrdersPage() {
                 <div className="space-y-2">
                   {order.items.map((item, index) => (
                     <div key={index} className="flex justify-between text-sm">
-                      <div>
-                        <span className="font-medium">
-                          {item.quantity}x {item.menuItem.name}
-                        </span>
+                      <span>
+                        {item.quantity}x {item.menuItem.name}
                         {item.cookingPreference && (
                           <span className="text-gray-500"> ({item.cookingPreference})</span>
                         )}
-                        {item.selectedExtras && item.selectedExtras.length > 0 && (
-                          <div className="text-gray-500 ml-4">
-                            {item.selectedExtras.map(extraId => {
-                              const extra = extras.find(e => e.id === extraId);
-                              return extra ? (
-                                <div key={extraId}>+ {extra.name}</div>
-                              ) : null;
-                            })}
-                          </div>
-                        )}
-                      </div>
+                      </span>
                       <span>Bs. {item.menuItem.price * item.quantity}</span>
                     </div>
                   ))}
@@ -295,7 +245,7 @@ export function OrdersPage() {
                   required
                 >
                   <option value="">Seleccionar mesa</option>
-                  {tables
+                  {mockTables
                     .filter(table => table.status === 'available')
                     .map(table => (
                       <option key={table.id} value={table.number}>
@@ -361,98 +311,59 @@ export function OrdersPage() {
             )}
 
             <div>
-              <h3 className="font-medium mb-4">Agregar Items</h3>
-              
-              {/* Lista de Platos por Categoría */}
-              {Object.entries(categories).map(([category, label]) => {
-                const categoryItems = menuItems.filter(item => item.category === category);
-                if (categoryItems.length === 0) return null;
-                
-                return (
-                  <div key={category} className="mb-6">
-                    <h4 className="text-lg font-medium mb-3">{label}</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      {categoryItems.map((item) => (
-                        <button
-                          key={item.id}
-                          type="button"
-                          className="flex items-center p-3 border rounded-lg hover:bg-gray-50 text-left"
-                          onClick={() => handleAddItem(item)}
-                        >
-                          <div className="flex-grow">
-                            <div className="font-medium">{item.name}</div>
-                            <div className="text-sm text-gray-600">Bs. {item.price}</div>
-                          </div>
-                        </button>
-                      ))}
+              <h3 className="font-medium mb-2">Agregar Items</h3>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                {mockMenuItems.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className="flex items-center p-2 border rounded-lg hover:bg-gray-50"
+                    onClick={() => handleAddItem(item)}
+                  >
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                    <div className="ml-2">
+                      <div className="font-medium">{item.name}</div>
+                      <div className="text-sm text-gray-600">Bs. {item.price}</div>
                     </div>
-                  </div>
-                );
-              })}
+                  </button>
+                ))}
+              </div>
 
               {newOrder.items.length > 0 && (
-                <div className="border rounded-lg p-4 mt-6">
-                  <h4 className="font-medium mb-4">Items Seleccionados</h4>
-                  <div className="space-y-4">
-                    {newOrder.items.map((item, index) => (
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-medium mb-2">Items Seleccionados</h4>
+                  <div className="space-y-2">
+                    {newOrder.items.map((item) => (
                       <div
-                        key={`${item.menuItem.id}-${index}`}
-                        className="border-b pb-4 last:border-b-0 last:pb-0"
+                        key={item.menuItem.id}
+                        className="flex items-center justify-between"
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <div>
-                            <span className="font-medium">{item.menuItem.name}</span>
-                            <span className="text-gray-600 ml-2">
-                              Bs. {item.menuItem.price * item.quantity}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              className="p-1 hover:bg-gray-100 rounded"
-                              onClick={() => handleQuantityChange(item.menuItem.id, -1)}
-                            >
-                              <Minus size={16} />
-                            </button>
-                            <span>{item.quantity}</span>
-                            <button
-                              type="button"
-                              className="p-1 hover:bg-gray-100 rounded"
-                              onClick={() => handleQuantityChange(item.menuItem.id, 1)}
-                            >
-                              <Plus size={16} />
-                            </button>
-                          </div>
+                        <div>
+                          <span className="font-medium">{item.menuItem.name}</span>
+                          <span className="text-gray-600 ml-2">
+                            Bs. {item.menuItem.price * item.quantity}
+                          </span>
                         </div>
-
-                        {/* Extras disponibles para este item */}
-                        <div className="ml-4 mt-2">
-                          <div className="text-sm font-medium text-gray-700 mb-1">
-                            Acompañamientos:
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {extras.map((extra) => (
-                              <label
-                                key={extra.id}
-                                className={`flex items-center p-2 rounded border text-sm ${
-                                  item.selectedExtras?.includes(extra.id)
-                                    ? 'border-blue-500 bg-blue-50'
-                                    : 'border-gray-300'
-                                }`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={item.selectedExtras?.includes(extra.id) || false}
-                                  onChange={() => handleToggleExtra(index, extra.id)}
-                                  className="mr-2"
-                                />
-                                <span>{extra.name}</span>
-                                <span className="ml-auto text-gray-600">
-                                  +Bs. {extra.price}
-                                </span>
-                              </label>
-                            ))}
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            className="p-1 hover:bg-gray-100 rounded"
+                            onClick={() => handleQuantityChange(item.menuItem.id, -1)}
+                          >
+                            <Minus size={16} />
+                          </button>
+                          <span>{item.quantity}</span>
+                          <button
+                            type="button"
+                            className="p-1 hover:bg-gray-100 rounded"
+                            onClick={() => handleQuantityChange(item.menuItem.id, 1)}
+                          >
+                            <Plus size={16} />
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -461,14 +372,10 @@ export function OrdersPage() {
                     <span>Total</span>
                     <span>
                       Bs.{' '}
-                      {newOrder.items.reduce((sum, item) => {
-                        const itemTotal = item.menuItem.price * item.quantity;
-                        const extrasTotal = (item.selectedExtras || []).reduce((acc, extraId) => {
-                          const extra = extras.find(e => e.id === extraId);
-                          return acc + (extra ? extra.price : 0);
-                        }, 0);
-                        return sum + itemTotal + (extrasTotal * item.quantity);
-                      }, 0)}
+                      {newOrder.items.reduce(
+                        (sum, item) => sum + item.menuItem.price * item.quantity,
+                        0
+                      )}
                     </span>
                   </div>
                 </div>
