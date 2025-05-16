@@ -26,7 +26,6 @@ export function MenuPage() {
     category: 'fried' as const,
     price: '',
     description: '',
-    image: '',
     selectedExtras: [] as string[]
   });
 
@@ -88,7 +87,6 @@ export function MenuPage() {
       category: item.category,
       price: item.price.toString(),
       description: item.description,
-      image: item.image,
       selectedExtras: item.selectedExtras || []
     });
     setIsEditMode(true);
@@ -115,7 +113,6 @@ export function MenuPage() {
         category: newDish.category,
         price: Number(newDish.price),
         description: newDish.description,
-        image: newDish.image,
         selectedExtras: newDish.selectedExtras
       });
     } else {
@@ -124,7 +121,6 @@ export function MenuPage() {
         category: newDish.category,
         price: Number(newDish.price),
         description: newDish.description,
-        image: newDish.image,
         selectedExtras: newDish.selectedExtras
       });
     }
@@ -152,7 +148,6 @@ export function MenuPage() {
       category: 'fried',
       price: '',
       description: '',
-      image: '',
       selectedExtras: []
     });
   };
@@ -239,19 +234,6 @@ export function MenuPage() {
                   type="number"
                   name="price"
                   value={newDish.price}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  URL de imagen
-                </label>
-                <input
-                  type="url"
-                  name="image"
-                  value={newDish.image}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   required
@@ -424,53 +406,46 @@ export function MenuPage() {
       {/* Lista de Platos */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {menuItems.map((item) => (
-          <div key={item.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-            <img
-              src={item.image}
-              alt={item.name}
-              className="w-full h-48 object-cover"
-            />
-            <div className="p-4">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3 className="text-lg font-semibold">{item.name}</h3>
-                  <span className="text-sm text-blue-600">{categories[item.category]}</span>
-                </div>
-                <span className="text-lg font-bold">Bs. {item.price}</span>
+          <div key={item.id} className="bg-white rounded-lg shadow-md p-4">
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <h3 className="text-lg font-semibold">{item.name}</h3>
+                <span className="text-sm text-blue-600">{categories[item.category]}</span>
               </div>
-              <p className="text-gray-600 text-sm mb-3">{item.description}</p>
-              {item.selectedExtras && item.selectedExtras.length > 0 && (
-                <div className="mb-3">
-                  <span className="text-sm font-medium text-gray-700">Acompañamientos:</span>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {item.selectedExtras.map((extraId) => {
-                      const extra = extras.find(e => e.id === extraId);
-                      return extra ? (
-                        <span
-                          key={extraId}
-                          className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
-                        >
-                          {extra.name}
-                        </span>
-                      ) : null;
-                    })}
-                  </div>
+              <span className="text-lg font-bold">Bs. {item.price}</span>
+            </div>
+            <p className="text-gray-600 text-sm mb-3">{item.description}</p>
+            {item.selectedExtras && item.selectedExtras.length > 0 && (
+              <div className="mb-3">
+                <span className="text-sm font-medium text-gray-700">Acompañamientos:</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {item.selectedExtras.map((extraId) => {
+                    const extra = extras.find(e => e.id === extraId);
+                    return extra ? (
+                      <span
+                        key={extraId}
+                        className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
+                      >
+                        {extra.name}
+                      </span>
+                    ) : null;
+                  })}
                 </div>
-              )}
-              <div className="flex justify-end gap-2 mt-4">
-                <button 
-                  className="text-blue-600 hover:bg-blue-50 p-2 rounded"
-                  onClick={() => handleEdit(item)}
-                >
-                  <Edit size={18} />
-                </button>
-                <button 
-                  className="text-red-600 hover:bg-red-50 p-2 rounded"
-                  onClick={() => handleDelete(item)}
-                >
-                  <Trash size={18} />
-                </button>
               </div>
+            )}
+            <div className="flex justify-end gap-2 mt-4">
+              <button 
+                className="text-blue-600 hover:bg-blue-50 p-2 rounded"
+                onClick={() => handleEdit(item)}
+              >
+                <Edit size={18} />
+              </button>
+              <button 
+                className="text-red-600 hover:bg-red-50 p-2 rounded"
+                onClick={() => handleDelete(item)}
+              >
+                <Trash size={18} />
+              </button>
             </div>
           </div>
         ))}

@@ -8,6 +8,15 @@ export interface User {
   active: boolean;
 }
 
+export interface MenuItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: 'fried' | 'grill' | 'oven' | 'drinks' | 'extras' | 'kids';
+  selectedExtras?: string[];
+}
+
 export interface Extra {
   id: string;
   name: string;
@@ -15,16 +24,6 @@ export interface Extra {
   description: string;
   category: 'sides' | 'sauces' | 'drinks' | 'other';
   available: boolean;
-}
-
-export interface MenuItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: 'fried' | 'grill' | 'oven' | 'drinks' | 'extras' | 'kids';
-  image: string;
-  selectedExtras?: string[];
 }
 
 export interface Table {
