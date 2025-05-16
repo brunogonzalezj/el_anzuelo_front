@@ -185,6 +185,84 @@ export function MenuPage() {
         </div>
       </div>
 
+      {/* Lista de Platos */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">Platos</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {menuItems.map((item) => (
+            <div key={item.id} className="bg-white rounded-lg shadow-md p-4">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h3 className="text-lg font-semibold">{item.name}</h3>
+                  <span className="text-sm text-blue-600">{categories[item.category]}</span>
+                </div>
+                <span className="text-lg font-bold">Bs. {item.price}</span>
+              </div>
+              <p className="text-gray-600 text-sm mb-3">{item.description}</p>
+              {item.selectedExtras && item.selectedExtras.length > 0 && (
+                <div className="mb-3">
+                  <span className="text-sm font-medium text-gray-700">Acompañamientos:</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {item.selectedExtras.map((extraId) => {
+                      const extra = extras.find(e => e.id === extraId);
+                      return extra ? (
+                        <span
+                          key={extraId}
+                          className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
+                        >
+                          {extra.name}
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+              )}
+              <div className="flex justify-end gap-2 mt-4">
+                <button 
+                  className="text-blue-600 hover:bg-blue-50 p-2 rounded"
+                  onClick={() => handleEdit(item)}
+                >
+                  <Edit size={18} />
+                </button>
+                <button 
+                  className="text-red-600 hover:bg-red-50 p-2 rounded"
+                  onClick={() => handleDelete(item)}
+                >
+                  <Trash size={18} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Lista de Acompañamientos */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">Acompañamientos</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {extras.map((extra) => (
+            <div
+              key={extra.id}
+              className="bg-white rounded-lg shadow-md p-4"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-medium">{extra.name}</h3>
+                  <p className="text-sm text-gray-600">{extra.description}</p>
+                  <p className="text-sm font-medium mt-1">Bs. {extra.price}</p>
+                </div>
+                <button
+                  className="text-red-600 hover:bg-red-50 p-2 rounded"
+                  onClick={() => handleDeleteExtra(extra)}
+                >
+                  <Trash size={18} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Modal para crear/editar platos */}
       <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
         <DialogContent>
@@ -375,84 +453,6 @@ export function MenuPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      {/* Lista de Acompañamientos */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Acompañamientos</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {extras.map((extra) => (
-            <div
-              key={extra.id}
-              className="bg-white rounded-lg shadow-md p-4"
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-medium">{extra.name}</h3>
-                  <p className="text-sm text-gray-600">{extra.description}</p>
-                  <p className="text-sm font-medium mt-1">Bs. {extra.price}</p>
-                </div>
-                <button
-                  className="text-red-600 hover:bg-red-50 p-2 rounded"
-                  onClick={() => handleDeleteExtra(extra)}
-                >
-                  <Trash size={18} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Lista de Platos */}
-      <div className="mb-8">
-      <h2 className="text-xl font-semibold mb-4">Platos</h2>  
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {menuItems.map((item) => (
-          <div key={item.id} className="bg-white rounded-lg shadow-md p-4">
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <h3 className="text-lg font-semibold">{item.name}</h3>
-                <span className="text-sm text-blue-600">{categories[item.category]}</span>
-              </div>
-              <span className="text-lg font-bold">Bs. {item.price}</span>
-            </div>
-            <p className="text-gray-600 text-sm mb-3">{item.description}</p>
-            {item.selectedExtras && item.selectedExtras.length > 0 && (
-              <div className="mb-3">
-                <span className="text-sm font-medium text-gray-700">Acompañamientos:</span>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {item.selectedExtras.map((extraId) => {
-                    const extra = extras.find(e => e.id === extraId);
-                    return extra ? (
-                      <span
-                        key={extraId}
-                        className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
-                      >
-                        {extra.name}
-                      </span>
-                    ) : null;
-                  })}
-                </div>
-              </div>
-            )}
-            <div className="flex justify-end gap-2 mt-4">
-              <button 
-                className="text-blue-600 hover:bg-blue-50 p-2 rounded"
-                onClick={() => handleEdit(item)}
-              >
-                <Edit size={18} />
-              </button>
-              <button 
-                className="text-red-600 hover:bg-red-50 p-2 rounded"
-                onClick={() => handleDelete(item)}
-              >
-                <Trash size={18} />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-      </div>
     </div>
   );
 }
