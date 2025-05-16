@@ -48,16 +48,16 @@ export const api: ApiEndpoints = {
         throw new Error('Invalid credentials');
       }
 
-      const token = btoa(`${user.email}:${user.role}`); // Simple token generation
-      const response: AuthResponse = { 
+      const token = btoa(`${user.email}:${user.role}`);
+      const response: AuthResponse = {
         user: {
           id: user.id,
           name: user.name,
           email: user.email,
           role: user.role,
           active: user.active
-        }, 
-        token 
+        },
+        token
       };
       
       return response;
