@@ -22,6 +22,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
         return <Navigate to="/menu" replace />;
       case 'cashier':
       case 'chef':
+      case 'messeur':  
         return <Navigate to="/orders" replace />;
       default:
         return <Navigate to="/login" replace />;
