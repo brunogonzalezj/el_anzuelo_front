@@ -1,6 +1,6 @@
 import type { ClassValue } from 'clsx';
 
-export type Role = 'admin' | 'cashier' | 'chef' | 'messeur';
+export type Role = 'ENCARGADO' | 'CAJERO' | 'CHEF' | 'MESERO' | 'REPARTIDOR';
 
 export interface User {
   id: string;
