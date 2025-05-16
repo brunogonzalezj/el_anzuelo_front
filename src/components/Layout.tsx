@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import {
   UtensilsCrossed,
@@ -27,11 +26,11 @@ export function Layout() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <aside className="w-64 bg-white shadow-lg">
+      <aside className="w-64 bg-white shadow-lg fixed h-screen flex flex-col">
         <div className="h-16 flex items-center px-6 border-b">
           <h1 className="text-xl font-bold text-blue-600">El Anzuelo</h1>
         </div>
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-2 flex-grow overflow-y-auto">
           {navItems.map(({ icon: Icon, label, path }) => (
             <Link
               key={path}
@@ -47,14 +46,16 @@ export function Layout() {
               <span>{label}</span>
             </Link>
           ))}
-          <button className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors mt-8">
+        </nav>
+        <div className="p-4 border-t mt-auto">
+          <button className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
             <LogOut size={20} />
             <span>Cerrar Sesión</span>
           </button>
-        </nav>
+        </div>
       </aside>
 
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-8 ml-64 overflow-y-auto">
         <Outlet />
       </main>
     </div>
