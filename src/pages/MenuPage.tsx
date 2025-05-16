@@ -404,6 +404,8 @@ export function MenuPage() {
       </div>
 
       {/* Lista de Platos */}
+      <div className="mb-8">
+      <h2 className="text-xl font-semibold mb-4">Platos</h2>  
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {menuItems.map((item) => (
           <div key={item.id} className="bg-white rounded-lg shadow-md p-4">
