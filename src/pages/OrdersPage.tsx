@@ -1,8 +1,14 @@
-import React from 'react';
-import { Clock, Check, ChefHat, Truck } from 'lucide-react';
+import React, { useState } from 'react';
+import { Clock, Check, ChefHat, Truck, Plus } from 'lucide-react';
 import { mockOrders } from '../data/mockData';
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
+import { Button } from '../components/ui/Button';
+import type { Order } from '../types';
 
 export function OrdersPage() {
+  const [orders, setOrders] = useState(mockOrders);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const statusMap = {
     pending: { label: 'Pendiente', icon: Clock, color: 'text-yellow-600 bg-yellow-50' },
     preparing: { label: 'Preparando', icon: ChefHat, color: 'text-blue-600 bg-blue-50' },
@@ -10,19 +16,44 @@ export function OrdersPage() {
     delivered: { label: 'Entregado', icon: Truck, color: 'text-gray-600 bg-gray-50' },
   };
 
+  const handleStatusChange = (orderId: string, newStatus: Order['status']) => {
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.id === orderId
+          ? { ...order, status: newStatus }
+          : order
+      )
+    );
+  };
+
+  const getNextStatus = (currentStatus: Order['status']): Order['status'] | null => {
+    const statusFlow = {
+      pending: 'preparing',
+      preparing: 'ready',
+      ready: 'delivered',
+      delivered: null,
+    };
+    return statusFlow[currentStatus] || null;
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Gestión de Pedidos</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg">
+        <button 
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <Plus size={20} />
           Nuevo Pedido
         </button>
       </div>
 
       <div className="grid gap-6">
-        {mockOrders.map((order) => {
+        {orders.map((order) => {
           const status = statusMap[order.status];
           const StatusIcon = status.icon;
+          const nextStatus = getNextStatus(order.status);
 
           return (
             <div key={order.id} className="bg-white rounded-lg shadow-md p-6">
@@ -48,7 +79,17 @@ export function OrdersPage() {
                     <p className="text-sm text-gray-600">Mesero: {order.waiter}</p>
                   )}
                 </div>
-                <span className="text-xl font-bold">Bs. {order.total}</span>
+                <div className="flex flex-col items-end gap-2">
+                  <span className="text-xl font-bold">Bs. {order.total}</span>
+                  {nextStatus && (
+                    <button
+                      className="text-sm px-3 py-1 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors"
+                      onClick={() => handleStatusChange(order.id, nextStatus)}
+                    >
+                      Marcar como {statusMap[nextStatus].label}
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="border-t pt-4">
@@ -71,6 +112,29 @@ export function OrdersPage() {
           );
         })}
       </div>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              Crear Nuevo Pedido
+            </DialogTitle>
+          </DialogHeader>
+          {/* Aquí irá el formulario para crear nuevos pedidos */}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setIsModalOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit">
+              Crear Pedido
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
