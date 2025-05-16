@@ -1,16 +1,22 @@
 import React, { useState } from 'react';
 import { Plus, Edit, Trash, X } from 'lucide-react';
 import { mockMenuItems } from '../data/mockData';
+import { Dialog, DialogContent, DialogHeader, DialogFooter } from '../components/ui/Dialog';
+import { Button } from '../components/ui/Button';
+import type { MenuItem } from '../types';
 
 export function MenuPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [menuItems, setMenuItems] = useState(mockMenuItems);
   const [newDish, setNewDish] = useState({
     name: '',
     category: 'fried',
     price: '',
     description: '',
     image: '',
-    sides: []
+    sides: [] as string[]
   });
 
   const categories = {
@@ -22,23 +28,72 @@ export function MenuPage() {
     kids: 'Menú Anzuelito',
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setNewDish(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSidesChange = (e) => {
+  const handleSidesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sidesInput = e.target.value;
     const sidesArray = sidesInput.split(',').map(side => side.trim()).filter(side => side !== '');
     setNewDish(prev => ({ ...prev, sides: sidesArray }));
   };
 
-  const handleSubmit = (e) => {
+  const handleEdit = (item: MenuItem) => {
+    setSelectedItem(item);
+    setNewDish({
+      name: item.name,
+      category: item.category,
+      price: item.price.toString(),
+      description: item.description,
+      image: item.image,
+      sides: item.sides || []
+    });
+    setIsEditMode(true);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (item: MenuItem) => {
+    if (window.confirm('¿Está seguro que desea eliminar este plato?')) {
+      setMenuItems(prev => prev.filter(i => i.id !== item.id));
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Aquí iría la lógica para guardar el nuevo plato
-    console.log('Nuevo plato:', newDish);
+    if (isEditMode && selectedItem) {
+      setMenuItems(prev => prev.map(item => 
+        item.id === selectedItem.id 
+          ? { 
+              ...item, 
+              name: newDish.name,
+              category: newDish.category as MenuItem['category'],
+              price: Number(newDish.price),
+              description: newDish.description,
+              image: newDish.image,
+              sides: newDish.sides
+            }
+          : item
+      ));
+    } else {
+      setMenuItems(prev => [...prev, {
+        id: Math.random().toString(36).substr(2, 9),
+        name: newDish.name,
+        category: newDish.category as MenuItem['category'],
+        price: Number(newDish.price),
+        description: newDish.description,
+        image: newDish.image,
+        sides: newDish.sides
+      }]);
+    }
+    
+    handleCloseModal();
+  };
+
+  const handleCloseModal = () => {
     setIsModalOpen(false);
-    // Resetear el formulario
+    setIsEditMode(false);
+    setSelectedItem(null);
     setNewDish({
       name: '',
       category: 'fried',
@@ -62,123 +117,116 @@ export function MenuPage() {
         </button>
       </div>
 
-      {/* Modal para nuevo plato */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl overflow-hidden">
-            <div className="flex justify-between items-center border-b p-4">
-              <h2 className="text-xl font-semibold">Crear Nuevo Plato</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-700">
-                <X size={20} />
-              </button>
+      <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
+        <DialogContent>
+          <DialogHeader>
+            <h2 className="text-xl font-semibold">
+              {isEditMode ? 'Editar Plato' : 'Crear Nuevo Plato'}
+            </h2>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre del plato
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={newDish.name}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Categoría
+                </label>
+                <select
+                  name="category"
+                  value={newDish.category}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
+                >
+                  {Object.entries(categories).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Precio (Bs.)
+                </label>
+                <input
+                  type="number"
+                  name="price"
+                  value={newDish.price}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  URL de imagen
+                </label>
+                <input
+                  type="url"
+                  name="image"
+                  value={newDish.image}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Descripción
+                </label>
+                <textarea
+                  name="description"
+                  value={newDish.description}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  rows={3}
+                  required
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Acompañamientos (separados por comas)
+                </label>
+                <input
+                  type="text"
+                  name="sides"
+                  value={newDish.sides.join(', ')}
+                  onChange={handleSidesChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
             </div>
-            <form onSubmit={handleSubmit} className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nombre del plato
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={newDish.name}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Categoría
-                  </label>
-                  <select
-                    name="category"
-                    value={newDish.category}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
-                  >
-                    {Object.entries(categories).map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Precio (Bs.)
-                  </label>
-                  <input
-                    type="number"
-                    name="price"
-                    value={newDish.price}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    URL de imagen
-                  </label>
-                  <input
-                    type="url"
-                    name="image"
-                    value={newDish.image}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Descripción
-                  </label>
-                  <textarea
-                    name="description"
-                    value={newDish.description}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    rows={3}
-                    required
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Acompañamientos (separados por comas)
-                  </label>
-                  <input
-                    type="text"
-                    name="sides"
-                    value={newDish.sides.join(', ')}
-                    onChange={handleSidesChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  Crear Plato
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleCloseModal}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit">
+                {isEditMode ? 'Guardar Cambios' : 'Crear Plato'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockMenuItems.map((item) => (
+        {menuItems.map((item) => (
           <div key={item.id} className="bg-white rounded-lg shadow-md overflow-hidden">
             <img
               src={item.image}
@@ -210,10 +258,16 @@ export function MenuPage() {
                 </div>
               )}
               <div className="flex justify-end gap-2 mt-4">
-                <button className="text-blue-600 hover:bg-blue-50 p-2 rounded">
+                <button 
+                  className="text-blue-600 hover:bg-blue-50 p-2 rounded"
+                  onClick={() => handleEdit(item)}
+                >
                   <Edit size={18} />
                 </button>
-                <button className="text-red-600 hover:bg-red-50 p-2 rounded">
+                <button 
+                  className="text-red-600 hover:bg-red-50 p-2 rounded"
+                  onClick={() => handleDelete(item)}
+                >
                   <Trash size={18} />
                 </button>
               </div>
