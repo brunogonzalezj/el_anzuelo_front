@@ -6,13 +6,16 @@ import { useStore } from '../store/useStore';
 import type { Order, MenuItem, Extra } from '../types';
 
 export function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const orders = useStore((state) => state.orders);
   const menuItems = useStore((state) => state.menu);
   const extras = useStore((state) => state.extras);
+  const fetchOrders = useStore((state) => state.fetchOrders);
   const fetchMenu = useStore((state) => state.fetchMenu);
   const fetchExtras = useStore((state) => state.fetchExtras);
+  const addOrder = useStore((state) => state.addOrder);
+  const updateOrderStatus = useStore((state) => state.updateOrderStatus);
   
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [newOrder, setNewOrder] = useState({
     type: 'dine-in' as const,
     tableNumber: '',
@@ -26,9 +29,10 @@ export function OrdersPage() {
   });
 
   useEffect(() => {
+    fetchOrders();
     fetchMenu();
     fetchExtras();
-  }, [fetchMenu, fetchExtras]);
+  }, [fetchOrders, fetchMenu, fetchExtras]);
 
   const statusMap = {
     pending: { label: 'Pendiente', icon: Clock, color: 'text-yellow-600 bg-yellow-50' },
@@ -46,14 +50,8 @@ export function OrdersPage() {
     kids: 'Menú Anzuelito',
   };
 
-  const handleStatusChange = (orderId: string, newStatus: Order['status']) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === orderId
-          ? { ...order, status: newStatus }
-          : order
-      )
-    );
+  const handleStatusChange = async (orderId: string, newStatus: Order['status']) => {
+    await updateOrderStatus(orderId, newStatus);
   };
 
   const getNextStatus = (currentStatus: Order['status']): Order['status'] | null => {
@@ -124,7 +122,7 @@ export function OrdersPage() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const total = newOrder.items.reduce(
       (sum, item) => {
@@ -138,15 +136,14 @@ export function OrdersPage() {
       0
     );
 
-    const newOrderData: Order = {
-      id: Math.random().toString(36).substr(2, 9),
+    const orderData: Omit<Order, 'id'> = {
       ...newOrder,
       status: 'pending',
       total: total + (newOrder.type === 'delivery' ? newOrder.deliveryInfo.deliveryFee : 0),
       createdAt: new Date(),
     };
 
-    setOrders(prev => [...prev, newOrderData]);
+    await addOrder(orderData);
     setIsModalOpen(false);
     setNewOrder({
       type: 'dine-in',
