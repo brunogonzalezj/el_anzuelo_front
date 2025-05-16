@@ -1,5 +1,3 @@
-import type { ClassValue } from 'clsx';
-
 export type Role = 'ENCARGADO' | 'CAJERO' | 'CHEF' | 'MESERO' | 'REPARTIDOR';
 
 export interface User {

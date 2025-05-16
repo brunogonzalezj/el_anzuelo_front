@@ -1,4 +1,4 @@
-import { ApiEndpoints, AuthResponse, MenuItem, Order, Table, User, Extra } from '../types';
+import { ApiEndpoints, } from '../types';
 
 const API_URL = 'http://localhost:3000/api';
 
@@ -15,12 +15,23 @@ export const api: ApiEndpoints = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-      
+
       if (!response.ok) {
         throw new Error('Invalid credentials');
       }
-      
-      return response.json();
+
+      const data = await response.json();
+
+      // Guardamos el token en localStorage
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('rol', JSON.stringify(data.usuario.rol));
+      } else {
+        console.error('No se recibió token del servidor');
+        throw new Error('No se recibió token del servidor');
+      }
+
+      return data;
     },
     logout: async () => {
       localStorage.removeItem('token');
