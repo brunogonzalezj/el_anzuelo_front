@@ -6,6 +6,7 @@ const mockUsers = [
     id: '1',
     name: 'Administrador',
     email: 'admin@elanzuelo.com',
+    password: 'admin123',
     role: 'admin',
     active: true,
   },
@@ -13,6 +14,7 @@ const mockUsers = [
     id: '2',
     name: 'Cajero',
     email: 'cashier@elanzuelo.com',
+    password: 'cashier123',
     role: 'cashier',
     active: true,
   },
@@ -20,6 +22,7 @@ const mockUsers = [
     id: '3',
     name: 'Cocinero',
     email: 'chef@elanzuelo.com',
+    password: 'chef123',
     role: 'chef',
     active: true,
   },
@@ -39,14 +42,23 @@ export const api: ApiEndpoints = {
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      const user = mockUsers.find((u) => u.email === email);
+      const user = mockUsers.find((u) => u.email === email && u.password === password);
       
-      if (!user || password !== `${user.role}123`) {
+      if (!user) {
         throw new Error('Invalid credentials');
       }
 
       const token = btoa(`${user.email}:${user.role}`); // Simple token generation
-      const response: AuthResponse = { user, token };
+      const response: AuthResponse = { 
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          active: user.active
+        }, 
+        token 
+      };
       
       return response;
     },

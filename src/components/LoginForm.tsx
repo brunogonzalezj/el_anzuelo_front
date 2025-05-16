@@ -12,11 +12,12 @@ export function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     try {
       await login(email, password);
-      navigate('/menu');
+      navigate('/');
     } catch (err) {
-      setError('Invalid credentials');
+      setError('Credenciales inválidas');
     }
   };
 
