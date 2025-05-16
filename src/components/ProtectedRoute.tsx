@@ -16,7 +16,16 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (!hasAccess(allowedRoles)) {
-    return <Navigate to="/unauthorized" replace />;
+    // Redirigir a la página principal según el rol del usuario
+    switch (user.role) {
+      case 'admin':
+        return <Navigate to="/menu" replace />;
+      case 'cashier':
+      case 'chef':
+        return <Navigate to="/orders" replace />;
+      default:
+        return <Navigate to="/login" replace />;
+    }
   }
 
   return <>{children}</>;

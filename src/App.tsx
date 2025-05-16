@@ -10,8 +10,27 @@ import { BillingPage } from './pages/BillingPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { UsersPage } from './pages/UsersPage';
 import { ToastProvider } from './components/ui/Toast';
+import { useStore } from './store/useStore';
 
 function App() {
+  const user = useStore((state) => state.user);
+
+  // Determinar la ruta inicial basada en el rol del usuario
+  const getInitialRoute = () => {
+    if (!user) return '/login';
+    
+    switch (user.role) {
+      case 'admin':
+        return '/menu';
+      case 'cashier':
+        return '/orders';
+      case 'chef':
+        return '/orders';
+      default:
+        return '/login';
+    }
+  };
+
   return (
     <BrowserRouter>
       <ToastProvider>
@@ -25,7 +44,7 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/menu" replace />} />
+            <Route index element={<Navigate to={getInitialRoute()} replace />} />
             <Route
               path="menu"
               element={
@@ -83,6 +102,7 @@ function App() {
               }
             />
           </Route>
+          <Route path="*" element={<Navigate to={getInitialRoute()} replace />} />
         </Routes>
       </ToastProvider>
     </BrowserRouter>
