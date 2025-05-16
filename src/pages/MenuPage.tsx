@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Edit, Trash, X } from 'lucide-react';
 import { mockMenuItems } from '../data/mockData';
-import { Dialog, DialogContent, DialogHeader, DialogFooter } from '../components/ui/Dialog';
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
 import type { MenuItem } from '../types';
 
@@ -120,9 +120,9 @@ export function MenuPage() {
       <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
         <DialogContent>
           <DialogHeader>
-            <h2 className="text-xl font-semibold">
+            <DialogTitle className="text-xl font-semibold">
               {isEditMode ? 'Editar Plato' : 'Crear Nuevo Plato'}
-            </h2>
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
