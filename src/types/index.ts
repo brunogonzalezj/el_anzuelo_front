@@ -3,20 +3,21 @@ import type { ClassValue } from 'clsx';
 export type Role = 'ENCARGADO' | 'CAJERO' | 'CHEF' | 'MESERO' | 'REPARTIDOR';
 
 export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: Role;
-  active: boolean;
+  id: number;
+  nombre: string;
+  apellido: string;
+  username: string;
+  rol: Role;
+  estado: 'ACTIVO' | 'INACTIVO';
 }
 
 export interface MenuItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: 'fried' | 'grill' | 'oven' | 'drinks' | 'extras' | 'kids';
-  selectedExtras?: string[];
+  id: number;
+  nombre: string;
+  descripcion: string;
+  precio: number;
+  categoria: string;
+  extras?: Extra[];
 }
 
 export interface Extra {
@@ -26,36 +27,43 @@ export interface Extra {
 }
 
 export interface Table {
-  id: string;
-  number: number;
+  id: number;
+  numero: number;
   sector: 'A' | 'B' | 'C';
-  seats: number;
-  status: 'available' | 'occupied' | 'reserved';
+  estado: 'DISPONIBLE' | 'RESERVADA' | 'OCUPADA';
+  capacidad: number;
+}
+
+export interface OrderDetail {
+  id: number;
+  platoId: number;
+  cantidad: number;
+  subtotal: number;
+  plato: MenuItem;
+  detallesExtra: {
+    id: number;
+    extraId: number;
+    cantidad: number;
+    extra: Extra;
+  }[];
 }
 
 export interface Order {
-  id: string;
-  tableNumber?: number;
-  waiter?: string;
-  items: {
-    menuItem: MenuItem;
-    quantity: number;
-    cookingPreference?: string;
-    selectedExtras?: string[];
-  }[];
-  status: 'pending' | 'preparing' | 'ready' | 'delivered';
+  id: number;
+  fechaCreacion: Date;
+  estado: 'PENDIENTE' | 'PREPARANDO' | 'LISTO' | 'ENTREGADO';
+  tipoPedido: 'MESA' | 'DELIVERY';
+  mesaId?: number;
+  meseroId?: number;
+  nombreCliente?: string;
+  direccionCliente?: string;
+  telefonoCliente?: string;
+  repartidorId?: number;
   total: number;
-  type: 'dine-in' | 'delivery';
-  note?: string;
-  deliveryInfo?: {
-    customerName: string;
-    address: string;
-    phone: string;
-    deliveryFee: number;
-  };
-  createdAt: Date;
-  paymentStatus?: 'pending' | 'paid';
-  paymentMethod?: 'cash' | 'qr';
+  detalles: OrderDetail[];
+  mesa?: Table;
+  mesero?: User;
+  repartidor?: User;
 }
 
 export interface AuthResponse {
@@ -70,14 +78,14 @@ export interface ApiError {
 
 export interface ApiEndpoints {
   auth: {
-    login: (email: string, password: string) => Promise<AuthResponse>;
+    login: (username: string, password: string) => Promise<AuthResponse>;
     logout: () => Promise<void>;
   };
   menu: {
     getAll: () => Promise<MenuItem[]>;
     create: (item: Omit<MenuItem, 'id'>) => Promise<MenuItem>;
-    update: (id: string, item: Partial<MenuItem>) => Promise<MenuItem>;
-    delete: (id: string) => Promise<void>;
+    update: (id: number, item: Partial<MenuItem>) => Promise<MenuItem>;
+    delete: (id: number) => Promise<void>;
   };
   extras: {
     getAll: () => Promise<Extra[]>;
@@ -88,18 +96,18 @@ export interface ApiEndpoints {
   };
   orders: {
     getAll: () => Promise<Order[]>;
-    create: (order: Omit<Order, 'id'>) => Promise<Order>;
-    update: (id: string, order: Partial<Order>) => Promise<Order>;
-    updateStatus: (id: string, status: Order['status']) => Promise<Order>;
+    create: (order: Omit<Order, 'id' | 'fechaCreacion'>) => Promise<Order>;
+    update: (id: number, order: Partial<Order>) => Promise<Order>;
+    updateStatus: (id: number, estado: Order['estado']) => Promise<Order>;
   };
   tables: {
     getAll: () => Promise<Table[]>;
-    update: (id: string, table: Partial<Table>) => Promise<Table>;
+    update: (id: number, table: Partial<Table>) => Promise<Table>;
   };
   users: {
     getAll: () => Promise<User[]>;
     create: (user: Omit<User, 'id'>) => Promise<User>;
-    update: (id: string, user: Partial<User>) => Promise<User>;
-    delete: (id: string) => Promise<void>;
+    update: (id: number, user: Partial<User>) => Promise<User>;
+    delete: (id: number) => Promise<void>;
   };
 }

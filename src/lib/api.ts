@@ -9,11 +9,11 @@ const headers = () => ({
 
 export const api: ApiEndpoints = {
   auth: {
-    login: async (email: string, password: string) => {
+    login: async (username: string, password: string) => {
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
       
       if (!response.ok) {
@@ -115,11 +115,11 @@ export const api: ApiEndpoints = {
       });
       return response.json();
     },
-    updateStatus: async (id, status) => {
-      const response = await fetch(`${API_URL}/pedidos/${id}/status`, {
+    updateStatus: async (id, estado) => {
+      const response = await fetch(`${API_URL}/pedidos/${id}/estado`, {
         method: 'PUT',
         headers: headers(),
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ estado }),
       });
       return response.json();
     },
