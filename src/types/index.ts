@@ -20,12 +20,9 @@ export interface MenuItem {
 }
 
 export interface Extra {
-  id: string;
-  name: string;
-  price: number;
-  description: string;
-  category: 'sides' | 'sauces' | 'drinks' | 'other';
-  available: boolean;
+  id: number;
+  nombre: string;
+  descripcion: string;
 }
 
 export interface Table {
@@ -84,9 +81,10 @@ export interface ApiEndpoints {
   };
   extras: {
     getAll: () => Promise<Extra[]>;
-    create: (extra: Omit<Extra, 'id'>) => Promise<Extra>;
-    update: (id: string, extra: Partial<Extra>) => Promise<Extra>;
-    delete: (id: string) => Promise<void>;
+    create: (extra: { nombre: string; descripcion: string }) => Promise<Extra>;
+    update: (id: number, extra: { nombre?: string; descripcion?: string }) => Promise<Extra>;
+    delete: (id: number) => Promise<void>;
+    getByPlato: (platoId: number) => Promise<Extra[]>;
   };
   orders: {
     getAll: () => Promise<Order[]>;

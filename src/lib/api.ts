@@ -1,116 +1,26 @@
 import { ApiEndpoints, AuthResponse, MenuItem, Order, Table, User, Extra } from '../types';
 
-// Mock users for testing
-const mockUsers = [
-  {
-    id: '1',
-    name: 'Administrador',
-    email: 'admin@elanzuelo.com',
-    password: 'admin123',
-    role: 'admin',
-    active: true,
-  },
-  {
-    id: '2',
-    name: 'Cajero',
-    email: 'cashier@elanzuelo.com',
-    password: 'cashier123',
-    role: 'cashier',
-    active: true,
-  },
-  {
-    id: '3',
-    name: 'Cocinero',
-    email: 'chef@elanzuelo.com',
-    password: 'chef123',
-    role: 'chef',
-    active: true,
-  },
-] as const;
-
-// Mock extras for testing
-const mockExtras: Extra[] = [
-  {
-    id: '1',
-    name: 'Extra queso',
-    price: 5,
-    description: 'Porción adicional de queso',
-    category: 'dairy',
-    available: true
-  },
-  {
-    id: '2',
-    name: 'Papas fritas',
-    price: 8,
-    description: 'Porción de papas fritas',
-    category: 'sides',
-    available: true
-  },
-  {
-    id: '3',
-    name: 'Salsa especial',
-    price: 3,
-    description: 'Salsa de la casa',
-    category: 'sauces',
-    available: true
-  }
-];
-
-// Mock menu items for testing
-const mockMenuItems: MenuItem[] = [
-  {
-    id: '1',
-    name: 'Hamburguesa Clásica',
-    price: 25,
-    description: 'Hamburguesa con queso, lechuga y tomate',
-    category: 'main',
-    available: true,
-    image: 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg'
-  },
-  {
-    id: '2',
-    name: 'Pizza Margherita',
-    price: 30,
-    description: 'Pizza con salsa de tomate, mozzarella y albahaca',
-    category: 'main',
-    available: true,
-    image: 'https://images.pexels.com/photos/825661/pexels-photo-825661.jpeg'
-  }
-];
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = 'http://localhost:3000/api';
 
 const headers = () => ({
   'Content-Type': 'application/json',
   Authorization: `Bearer ${localStorage.getItem('token')}`,
 });
 
-// Simulated API endpoints
 export const api: ApiEndpoints = {
   auth: {
     login: async (email: string, password: string) => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const user = mockUsers.find((u) => u.email === email && u.password === password);
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
       
-      if (!user) {
+      if (!response.ok) {
         throw new Error('Invalid credentials');
       }
-
-      const token = btoa(`${user.email}:${user.role}`);
-      const response: AuthResponse = {
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          active: user.active
-        },
-        token
-      };
       
-      return response;
+      return response.json();
     },
     logout: async () => {
       localStorage.removeItem('token');
@@ -118,89 +28,79 @@ export const api: ApiEndpoints = {
   },
   menu: {
     getAll: async () => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      return mockMenuItems;
+      const response = await fetch(`${API_URL}/platos`, {
+        headers: headers(),
+      });
+      return response.json();
     },
-    create: async (item: Omit<MenuItem, 'id'>) => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      
-      const newItem: MenuItem = {
-        ...item,
-        id: Math.random().toString(36).substr(2, 9)
-      };
-      
-      mockMenuItems.push(newItem);
-      return newItem;
+    create: async (item) => {
+      const response = await fetch(`${API_URL}/platos`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify(item),
+      });
+      return response.json();
     },
-    update: async (id: string, item: Partial<MenuItem>) => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      
-      const index = mockMenuItems.findIndex(i => i.id === id);
-      if (index === -1) throw new Error('Menu item not found');
-      
-      mockMenuItems[index] = { ...mockMenuItems[index], ...item };
-      return mockMenuItems[index];
+    update: async (id, item) => {
+      const response = await fetch(`${API_URL}/platos/${id}`, {
+        method: 'PUT',
+        headers: headers(),
+        body: JSON.stringify(item),
+      });
+      return response.json();
     },
-    delete: async (id: string) => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      
-      const index = mockMenuItems.findIndex(i => i.id === id);
-      if (index === -1) throw new Error('Menu item not found');
-      
-      mockMenuItems.splice(index, 1);
+    delete: async (id) => {
+      await fetch(`${API_URL}/platos/${id}`, {
+        method: 'DELETE',
+        headers: headers(),
+      });
     },
   },
   extras: {
     getAll: async () => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      return mockExtras;
+      const response = await fetch(`${API_URL}/extras`, {
+        headers: headers(),
+      });
+      return response.json();
     },
-    create: async (extra: Omit<Extra, 'id'>) => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      
-      const newExtra: Extra = {
-        ...extra,
-        id: Math.random().toString(36).substr(2, 9)
-      };
-      
-      mockExtras.push(newExtra);
-      return newExtra;
+    create: async (extra) => {
+      const response = await fetch(`${API_URL}/extras`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify(extra),
+      });
+      return response.json();
     },
-    update: async (id: string, extra: Partial<Extra>) => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      
-      const index = mockExtras.findIndex(e => e.id === id);
-      if (index === -1) throw new Error('Extra not found');
-      
-      mockExtras[index] = { ...mockExtras[index], ...extra };
-      return mockExtras[index];
+    update: async (id, extra) => {
+      const response = await fetch(`${API_URL}/extras/${id}`, {
+        method: 'PUT',
+        headers: headers(),
+        body: JSON.stringify(extra),
+      });
+      return response.json();
     },
-    delete: async (id: string) => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      
-      const index = mockExtras.findIndex(e => e.id === id);
-      if (index === -1) throw new Error('Extra not found');
-      
-      mockExtras.splice(index, 1);
+    delete: async (id) => {
+      await fetch(`${API_URL}/extras/${id}`, {
+        method: 'DELETE',
+        headers: headers(),
+      });
+    },
+    getByPlato: async (platoId) => {
+      const response = await fetch(`${API_URL}/extras/plato/${platoId}`, {
+        headers: headers(),
+      });
+      return response.json();
     },
   },
   orders: {
     getAll: async () => {
-      const response = await fetch(`${API_URL}/orders`, {
+      const response = await fetch(`${API_URL}/pedidos`, {
         headers: headers(),
       });
       return response.json();
     },
     create: async (order) => {
-      const response = await fetch(`${API_URL}/orders`, {
+      const response = await fetch(`${API_URL}/pedidos`, {
         method: 'POST',
         headers: headers(),
         body: JSON.stringify(order),
@@ -208,7 +108,7 @@ export const api: ApiEndpoints = {
       return response.json();
     },
     update: async (id, order) => {
-      const response = await fetch(`${API_URL}/orders/${id}`, {
+      const response = await fetch(`${API_URL}/pedidos/${id}`, {
         method: 'PUT',
         headers: headers(),
         body: JSON.stringify(order),
@@ -216,7 +116,7 @@ export const api: ApiEndpoints = {
       return response.json();
     },
     updateStatus: async (id, status) => {
-      const response = await fetch(`${API_URL}/orders/${id}/status`, {
+      const response = await fetch(`${API_URL}/pedidos/${id}/status`, {
         method: 'PUT',
         headers: headers(),
         body: JSON.stringify({ status }),
@@ -226,13 +126,13 @@ export const api: ApiEndpoints = {
   },
   tables: {
     getAll: async () => {
-      const response = await fetch(`${API_URL}/tables`, {
+      const response = await fetch(`${API_URL}/mesas`, {
         headers: headers(),
       });
       return response.json();
     },
     update: async (id, table) => {
-      const response = await fetch(`${API_URL}/tables/${id}`, {
+      const response = await fetch(`${API_URL}/mesas/${id}`, {
         method: 'PUT',
         headers: headers(),
         body: JSON.stringify(table),
@@ -242,13 +142,13 @@ export const api: ApiEndpoints = {
   },
   users: {
     getAll: async () => {
-      const response = await fetch(`${API_URL}/users`, {
+      const response = await fetch(`${API_URL}/usuarios`, {
         headers: headers(),
       });
       return response.json();
     },
     create: async (user) => {
-      const response = await fetch(`${API_URL}/users`, {
+      const response = await fetch(`${API_URL}/usuarios`, {
         method: 'POST',
         headers: headers(),
         body: JSON.stringify(user),
@@ -256,7 +156,7 @@ export const api: ApiEndpoints = {
       return response.json();
     },
     update: async (id, user) => {
-      const response = await fetch(`${API_URL}/users/${id}`, {
+      const response = await fetch(`${API_URL}/usuarios/${id}`, {
         method: 'PUT',
         headers: headers(),
         body: JSON.stringify(user),
@@ -264,7 +164,7 @@ export const api: ApiEndpoints = {
       return response.json();
     },
     delete: async (id) => {
-      await fetch(`${API_URL}/users/${id}`, {
+      await fetch(`${API_URL}/usuarios/${id}`, {
         method: 'DELETE',
         headers: headers(),
       });
