@@ -56,6 +56,28 @@ const mockExtras: Extra[] = [
   }
 ];
 
+// Mock menu items for testing
+const mockMenuItems: MenuItem[] = [
+  {
+    id: '1',
+    name: 'Hamburguesa Clásica',
+    price: 25,
+    description: 'Hamburguesa con queso, lechuga y tomate',
+    category: 'main',
+    available: true,
+    image: 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg'
+  },
+  {
+    id: '2',
+    name: 'Pizza Margherita',
+    price: 30,
+    description: 'Pizza con salsa de tomate, mozzarella y albahaca',
+    category: 'main',
+    available: true,
+    image: 'https://images.pexels.com/photos/825661/pexels-photo-825661.jpeg'
+  }
+];
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const headers = () => ({
@@ -96,32 +118,40 @@ export const api: ApiEndpoints = {
   },
   menu: {
     getAll: async () => {
-      const response = await fetch(`${API_URL}/menu`, {
-        headers: headers(),
-      });
-      return response.json();
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return mockMenuItems;
     },
-    create: async (item) => {
-      const response = await fetch(`${API_URL}/menu`, {
-        method: 'POST',
-        headers: headers(),
-        body: JSON.stringify(item),
-      });
-      return response.json();
+    create: async (item: Omit<MenuItem, 'id'>) => {
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      
+      const newItem: MenuItem = {
+        ...item,
+        id: Math.random().toString(36).substr(2, 9)
+      };
+      
+      mockMenuItems.push(newItem);
+      return newItem;
     },
-    update: async (id, item) => {
-      const response = await fetch(`${API_URL}/menu/${id}`, {
-        method: 'PUT',
-        headers: headers(),
-        body: JSON.stringify(item),
-      });
-      return response.json();
+    update: async (id: string, item: Partial<MenuItem>) => {
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      
+      const index = mockMenuItems.findIndex(i => i.id === id);
+      if (index === -1) throw new Error('Menu item not found');
+      
+      mockMenuItems[index] = { ...mockMenuItems[index], ...item };
+      return mockMenuItems[index];
     },
-    delete: async (id) => {
-      await fetch(`${API_URL}/menu/${id}`, {
-        method: 'DELETE',
-        headers: headers(),
-      });
+    delete: async (id: string) => {
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      
+      const index = mockMenuItems.findIndex(i => i.id === id);
+      if (index === -1) throw new Error('Menu item not found');
+      
+      mockMenuItems.splice(index, 1);
     },
   },
   extras: {
