@@ -1,21 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, PencilIcon, Trash } from 'lucide-react';
-import { mockTables } from '../data/mockData';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
+import { useStore } from '../store/useStore';
 import type { Table } from '../types';
 
 export function TablesPage() {
-  const [tables, setTables] = useState(mockTables);
+  const tables = useStore((state) => state.tables);
+  const fetchTables = useStore((state) => state.fetchTables);
+  const updateTable = useStore((state) => state.updateTableStatus);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [newTable, setNewTable] = useState({
     number: '',
-    sector: 'A',
-    seats: '',
-    status: 'available' as const,
+    capacity: '',
+    status: 'available' as const
   });
+
+  useEffect(() => {
+    fetchTables();
+  }, [fetchTables]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -43,33 +48,16 @@ export function TablesPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isEditMode && selectedTable) {
-      setTables(prev =>
-        prev.map(table =>
-          table.id === selectedTable.id
-            ? {
-                ...table,
-                number: parseInt(newTable.number),
-                sector: newTable.sector as 'A' | 'B' | 'C',
-                seats: parseInt(newTable.seats),
-                status: newTable.status,
-              }
-            : table
-        )
-      );
+      await updateTable(selectedTable.id, {
+        number: parseInt(newTable.number),
+        capacity: parseInt(newTable.capacity.toString()),
+        status: newTable.status
+      });
     } else {
-      setTables(prev => [
-        ...prev,
-        {
-          id: Math.random().toString(36).substr(2, 9),
-          number: parseInt(newTable.number),
-          sector: newTable.sector as 'A' | 'B' | 'C',
-          seats: parseInt(newTable.seats),
-          status: newTable.status,
-        },
-      ]);
+      // Add new table logic here
     }
     handleCloseModal();
   };
@@ -78,17 +66,16 @@ export function TablesPage() {
     setSelectedTable(table);
     setNewTable({
       number: table.number.toString(),
-      sector: table.sector,
-      seats: table.seats.toString(),
-      status: table.status,
+      capacity: table.capacity.toString(),
+      status: table.status
     });
     setIsEditMode(true);
     setIsModalOpen(true);
   };
 
-  const handleDelete = (table: Table) => {
+  const handleDelete = async (table: Table) => {
     if (window.confirm('¿Está seguro que desea eliminar esta mesa?')) {
-      setTables(prev => prev.filter(t => t.id !== table.id));
+      // Delete table logic here
     }
   };
 
@@ -98,11 +85,13 @@ export function TablesPage() {
     setSelectedTable(null);
     setNewTable({
       number: '',
-      sector: 'A',
-      seats: '',
-      status: 'available',
+      capacity: '',
+      status: 'available'
     });
   };
+
+  // Group tables by sector
+  const sectors = ['A', 'B', 'C'];
 
   return (
     <div>
@@ -115,6 +104,54 @@ export function TablesPage() {
           <Plus size={20} />
           Nueva Mesa
         </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {sectors.map(sector => (
+          <div key={sector} className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4">Sector {sector}</h2>
+            <div className="space-y-4">
+              {tables
+                .filter(table => table.sector === sector)
+                .map(table => (
+                  <div
+                    key={table.id}
+                    className="border rounded-lg p-4"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h3 className="font-medium">Mesa {table.number}</h3>
+                        <p className="text-sm text-gray-600">
+                          Capacidad: {table.capacity} personas
+                        </p>
+                      </div>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                          table.status
+                        )}`}
+                      >
+                        {getStatusLabel(table.status)}
+                      </span>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <button
+                        className="text-blue-600 hover:bg-blue-50 p-2 rounded"
+                        onClick={() => handleEdit(table)}
+                      >
+                        <PencilIcon size={18} />
+                      </button>
+                      <button
+                        className="text-red-600 hover:bg-red-50 p-2 rounded"
+                        onClick={() => handleDelete(table)}
+                      >
+                        <Trash size={18} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        ))}
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
@@ -139,28 +176,13 @@ export function TablesPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Sector
-              </label>
-              <select
-                className="w-full px-3 py-2 border rounded-md"
-                value={newTable.sector}
-                onChange={e => setNewTable(prev => ({ ...prev, sector: e.target.value }))}
-                required
-              >
-                <option value="A">Sector A</option>
-                <option value="B">Sector B</option>
-                <option value="C">Sector C</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Capacidad
               </label>
               <input
                 type="number"
                 className="w-full px-3 py-2 border rounded-md"
-                value={newTable.seats}
-                onChange={e => setNewTable(prev => ({ ...prev, seats: e.target.value }))}
+                value={newTable.capacity}
+                onChange={e => setNewTable(prev => ({ ...prev, capacity: e.target.value }))}
                 required
               />
             </div>
@@ -195,52 +217,6 @@ export function TablesPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {['A', 'B', 'C'].map(sector => (
-          <div key={sector} className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4">Sector {sector}</h2>
-            <div className="space-y-4">
-              {tables
-                .filter(table => table.sector === sector)
-                .map(table => (
-                  <div
-                    key={table.id}
-                    className="border rounded-lg p-4 hover:border-blue-500 transition-colors"
-                  >
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-medium">Mesa {table.number}</span>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
-                          table.status
-                        )}`}
-                      >
-                        {getStatusLabel(table.status)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Capacidad: {table.seats} personas
-                    </p>
-                    <div className="flex justify-end gap-2">
-                      <button
-                        className="text-blue-600 hover:bg-blue-50 p-2 rounded"
-                        onClick={() => handleEdit(table)}
-                      >
-                        <PencilIcon size={18} />
-                      </button>
-                      <button
-                        className="text-red-600 hover:bg-red-50 p-2 rounded"
-                        onClick={() => handleDelete(table)}
-                      >
-                        <Trash size={18} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
