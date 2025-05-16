@@ -1,8 +1,9 @@
-export type Role = 'manager' | 'waiter' | 'cashier' | 'chef' | 'delivery';
+export type Role = 'admin' | 'cashier' | 'chef';
 
 export interface User {
   id: string;
   name: string;
+  email: string;
   role: Role;
   active: boolean;
 }
@@ -44,4 +45,46 @@ export interface Order {
     deliveryFee: number;
   };
   createdAt: Date;
+  paymentStatus?: 'pending' | 'paid';
+  paymentMethod?: 'cash' | 'qr';
+}
+
+export interface AuthResponse {
+  user: User;
+  token: string;
+}
+
+export interface ApiError {
+  message: string;
+  status: number;
+}
+
+// API interfaces for backend integration
+export interface ApiEndpoints {
+  auth: {
+    login: (email: string, password: string) => Promise<AuthResponse>;
+    logout: () => Promise<void>;
+  };
+  menu: {
+    getAll: () => Promise<MenuItem[]>;
+    create: (item: Omit<MenuItem, 'id'>) => Promise<MenuItem>;
+    update: (id: string, item: Partial<MenuItem>) => Promise<MenuItem>;
+    delete: (id: string) => Promise<void>;
+  };
+  orders: {
+    getAll: () => Promise<Order[]>;
+    create: (order: Omit<Order, 'id'>) => Promise<Order>;
+    update: (id: string, order: Partial<Order>) => Promise<Order>;
+    updateStatus: (id: string, status: Order['status']) => Promise<Order>;
+  };
+  tables: {
+    getAll: () => Promise<Table[]>;
+    update: (id: string, table: Partial<Table>) => Promise<Table>;
+  };
+  users: {
+    getAll: () => Promise<User[]>;
+    create: (user: Omit<User, 'id'>) => Promise<User>;
+    update: (id: string, user: Partial<User>) => Promise<User>;
+    delete: (id: string) => Promise<void>;
+  };
 }
