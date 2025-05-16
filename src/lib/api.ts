@@ -1,5 +1,30 @@
 import { ApiEndpoints, AuthResponse, MenuItem, Order, Table, User } from '../types';
 
+// Mock users for testing
+const mockUsers = [
+  {
+    id: '1',
+    name: 'Administrador',
+    email: 'admin@elanzuelo.com',
+    role: 'admin',
+    active: true,
+  },
+  {
+    id: '2',
+    name: 'Cajero',
+    email: 'cashier@elanzuelo.com',
+    role: 'cashier',
+    active: true,
+  },
+  {
+    id: '3',
+    name: 'Cocinero',
+    email: 'chef@elanzuelo.com',
+    role: 'chef',
+    active: true,
+  },
+] as const;
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const headers = () => ({
@@ -7,22 +32,23 @@ const headers = () => ({
   Authorization: `Bearer ${localStorage.getItem('token')}`,
 });
 
+// Simulated API endpoints
 export const api: ApiEndpoints = {
   auth: {
     login: async (email: string, password: string) => {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      if (!response.ok) {
-        throw new Error('Login failed');
+      const user = mockUsers.find((u) => u.email === email);
+      
+      if (!user || password !== `${user.role}123`) {
+        throw new Error('Invalid credentials');
       }
 
-      const data: AuthResponse = await response.json();
-      localStorage.setItem('token', data.token);
-      return data;
+      const token = btoa(`${user.email}:${user.role}`); // Simple token generation
+      const response: AuthResponse = { user, token };
+      
+      return response;
     },
     logout: async () => {
       localStorage.removeItem('token');
