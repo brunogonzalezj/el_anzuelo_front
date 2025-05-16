@@ -85,12 +85,13 @@ export function OrdersPage() {
       items: prev.items.map(item => {
         if (item.menuItem.id === menuItemId) {
           const newQuantity = item.quantity + delta;
-          return newQuantity > 0
-            ? { ...item, quantity: newQuantity }
-            : item;
+          if (newQuantity <= 0) {
+            return item;
+          }
+          return { ...item, quantity: newQuantity };
         }
         return item;
-      }).filter(item => item.quantity > 0)
+      })
     }));
   };
 
@@ -208,7 +209,7 @@ export function OrdersPage() {
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold">
               Crear Nuevo Pedido
@@ -319,7 +320,7 @@ export function OrdersPage() {
 
             <div>
               <h3 className="font-medium mb-2">Agregar Items</h3>
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-2 gap-4 mb-4 max-h-48 overflow-y-auto">
                 {mockMenuItems.map((item) => (
                   <button
                     key={item.id}
@@ -365,6 +366,13 @@ export function OrdersPage() {
                             onClick={() => handleQuantityChange(item.menuItem.id, 1)}
                           >
                             <Plus size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            className="ml-2 text-red-600 hover:bg-red-50 p-1 rounded"
+                            onClick={() => handleRemoveItem(item.menuItem.id)}
+                          >
+                            ×
                           </button>
                         </div>
                       </div>
