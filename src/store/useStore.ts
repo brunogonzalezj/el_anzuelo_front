@@ -6,7 +6,7 @@ import { api } from '../lib/api';
 interface AuthState {
   user: User | null;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -14,38 +14,38 @@ interface MenuState {
   menu: MenuItem[];
   fetchMenu: () => Promise<void>;
   addMenuItem: (item: Omit<MenuItem, 'id'>) => Promise<void>;
-  updateMenuItem: (id: string, item: Partial<MenuItem>) => Promise<void>;
-  removeMenuItem: (id: string) => Promise<void>;
+  updateMenuItem: (id: number, item: Partial<MenuItem>) => Promise<void>;
+  removeMenuItem: (id: number) => Promise<void>;
 }
 
 interface ExtrasState {
   extras: Extra[];
   fetchExtras: () => Promise<void>;
   addExtra: (extra: Omit<Extra, 'id'>) => Promise<void>;
-  updateExtra: (id: string, extra: Partial<Extra>) => Promise<void>;
-  removeExtra: (id: string) => Promise<void>;
+  updateExtra: (id: number, extra: Partial<Extra>) => Promise<void>;
+  removeExtra: (id: number) => Promise<void>;
 }
 
 interface OrderState {
   orders: Order[];
   fetchOrders: () => Promise<void>;
-  addOrder: (order: Omit<Order, 'id'>) => Promise<void>;
-  updateOrder: (id: string, order: Partial<Order>) => Promise<void>;
-  updateOrderStatus: (id: string, status: Order['status']) => Promise<void>;
+  addOrder: (order: Omit<Order, 'id' | 'fechaCreacion'>) => Promise<void>;
+  updateOrder: (id: number, order: Partial<Order>) => Promise<void>;
+  updateOrderStatus: (id: number, estado: Order['estado']) => Promise<void>;
 }
 
 interface TableState {
   tables: Table[];
   fetchTables: () => Promise<void>;
-  updateTableStatus: (id: string, status: Table['status']) => Promise<void>;
+  updateTableStatus: (id: number, estado: Table['estado']) => Promise<void>;
 }
 
 interface UserState {
   users: User[];
   fetchUsers: () => Promise<void>;
   addUser: (user: Omit<User, 'id'>) => Promise<void>;
-  updateUser: (id: string, user: Partial<User>) => Promise<void>;
-  removeUser: (id: string) => Promise<void>;
+  updateUser: (id: number, user: Partial<User>) => Promise<void>;
+  removeUser: (id: number) => Promise<void>;
 }
 
 interface Store extends AuthState, MenuState, ExtrasState, OrderState, TableState, UserState {
@@ -58,8 +58,8 @@ export const useStore = create<Store>()(
       // Auth State
       user: null,
       token: null,
-      login: async (email, password) => {
-        const response = await api.auth.login(email, password);
+      login: async (username, password) => {
+        const response = await api.auth.login(username, password);
         set({ user: response.user, token: response.token });
       },
       logout: async () => {
@@ -133,8 +133,8 @@ export const useStore = create<Store>()(
           orders: state.orders.map((o) => (o.id === id ? updatedOrder : o)),
         }));
       },
-      updateOrderStatus: async (id, status) => {
-        const updatedOrder = await api.orders.updateStatus(id, status);
+      updateOrderStatus: async (id, estado) => {
+        const updatedOrder = await api.orders.updateStatus(id, estado);
         set((state) => ({
           orders: state.orders.map((o) => (o.id === id ? updatedOrder : o)),
         }));
@@ -146,8 +146,8 @@ export const useStore = create<Store>()(
         const tables = await api.tables.getAll();
         set({ tables });
       },
-      updateTableStatus: async (id, status) => {
-        const updatedTable = await api.tables.update(id, { status });
+      updateTableStatus: async (id, estado) => {
+        const updatedTable = await api.tables.update(id, { estado });
         set((state) => ({
           tables: state.tables.map((table) =>
             table.id === id ? updatedTable : table
@@ -181,7 +181,7 @@ export const useStore = create<Store>()(
       // Access Control
       hasAccess: (allowedRoles: Role[]) => {
         const user = get().user;
-        return user ? allowedRoles.includes(user.role) : false;
+        return user ? allowedRoles.includes(user.rol) : false;
       },
     }),
     {
