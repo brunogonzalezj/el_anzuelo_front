@@ -28,53 +28,80 @@ const mockUsers = [
   },
 ] as const;
 
+// Mock menu items for testing
+const mockMenuItems: MenuItem[] = [
+  {
+    id: '1',
+    name: 'Pescado Frito',
+    description: 'Pescado fresco frito con limón y especias',
+    price: 45,
+    category: 'fried',
+    selectedExtras: []
+  },
+  {
+    id: '2',
+    name: 'Parrillada Mixta',
+    description: 'Selección de mariscos a la parrilla',
+    price: 85,
+    category: 'grill',
+    selectedExtras: []
+  },
+  {
+    id: '3',
+    name: 'Calamares al Ajillo',
+    description: 'Calamares frescos al horno con ajo y perejil',
+    price: 35,
+    category: 'oven',
+    selectedExtras: []
+  }
+];
+
 // Mock extras for testing
 const mockExtras: Extra[] = [
   {
     id: '1',
-    name: 'Extra queso',
-    price: 5,
-    description: 'Porción adicional de queso',
-    category: 'dairy',
+    name: 'Arroz',
+    price: 10,
+    description: 'Porción de arroz blanco',
+    category: 'sides',
     available: true
   },
   {
     id: '2',
-    name: 'Papas fritas',
-    price: 8,
-    description: 'Porción de papas fritas',
+    name: 'Ensalada',
+    price: 12,
+    description: 'Ensalada fresca de la casa',
     category: 'sides',
     available: true
   },
   {
     id: '3',
-    name: 'Salsa especial',
-    price: 3,
-    description: 'Salsa de la casa',
-    category: 'sauces',
+    name: 'Papas Fritas',
+    price: 15,
+    description: 'Porción de papas fritas',
+    category: 'sides',
     available: true
   }
 ];
 
-// Mock menu items for testing
-const mockMenuItems: MenuItem[] = [
+// Mock orders for testing
+const mockOrders: Order[] = [
   {
     id: '1',
-    name: 'Hamburguesa Clásica',
-    price: 25,
-    description: 'Hamburguesa con queso, lechuga y tomate',
-    category: 'main',
-    available: true,
-    image: 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg'
-  },
-  {
-    id: '2',
-    name: 'Pizza Margherita',
-    price: 30,
-    description: 'Pizza con salsa de tomate, mozzarella y albahaca',
-    category: 'main',
-    available: true,
-    image: 'https://images.pexels.com/photos/825661/pexels-photo-825661.jpeg'
+    tableNumber: 5,
+    waiter: 'Carlos Pérez',
+    items: [
+      { 
+        menuItem: mockMenuItems[0], 
+        quantity: 2, 
+        cookingPreference: 'Bien cocido',
+        selectedExtras: [mockExtras[0].id, mockExtras[1].id]
+      }
+    ],
+    status: 'preparing',
+    total: 114,
+    type: 'dine-in',
+    createdAt: new Date()
   }
 ];
 
@@ -194,34 +221,41 @@ export const api: ApiEndpoints = {
   },
   orders: {
     getAll: async () => {
-      const response = await fetch(`${API_URL}/orders`, {
-        headers: headers(),
-      });
-      return response.json();
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return mockOrders;
     },
-    create: async (order) => {
-      const response = await fetch(`${API_URL}/orders`, {
-        method: 'POST',
-        headers: headers(),
-        body: JSON.stringify(order),
-      });
-      return response.json();
+    create: async (order: Omit<Order, 'id'>) => {
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      
+      const newOrder: Order = {
+        ...order,
+        id: Math.random().toString(36).substr(2, 9)
+      };
+      
+      mockOrders.push(newOrder);
+      return newOrder;
     },
-    update: async (id, order) => {
-      const response = await fetch(`${API_URL}/orders/${id}`, {
-        method: 'PUT',
-        headers: headers(),
-        body: JSON.stringify(order),
-      });
-      return response.json();
+    update: async (id: string, order: Partial<Order>) => {
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      
+      const index = mockOrders.findIndex(o => o.id === id);
+      if (index === -1) throw new Error('Order not found');
+      
+      mockOrders[index] = { ...mockOrders[index], ...order };
+      return mockOrders[index];
     },
-    updateStatus: async (id, status) => {
-      const response = await fetch(`${API_URL}/orders/${id}/status`, {
-        method: 'PUT',
-        headers: headers(),
-        body: JSON.stringify({ status }),
-      });
-      return response.json();
+    updateStatus: async (id: string, status: Order['status']) => {
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      
+      const index = mockOrders.findIndex(o => o.id === id);
+      if (index === -1) throw new Error('Order not found');
+      
+      mockOrders[index].status = status;
+      return mockOrders[index];
     },
   },
   tables: {
