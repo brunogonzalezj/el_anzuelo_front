@@ -23,6 +23,7 @@ export const api: ApiEndpoints = {
       const data = await response.json();
       if (data.token) {
         localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.usuario));
       } else {
         throw new Error('No se recibió token del servidor');
       }
@@ -31,6 +32,7 @@ export const api: ApiEndpoints = {
     },
     logout: async () => {
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
     },
   },
   menu: {
@@ -39,6 +41,12 @@ export const api: ApiEndpoints = {
         headers: headers(),
       });
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          throw new Error('Session expired');
+        }
         throw new Error('Error fetching menu items');
       }
       return response.json();
@@ -81,6 +89,12 @@ export const api: ApiEndpoints = {
         headers: headers(),
       });
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          throw new Error('Session expired');
+        }
         throw new Error('Error fetching extras');
       }
       return response.json();
@@ -117,7 +131,7 @@ export const api: ApiEndpoints = {
       }
     },
     getByPlato: async (platoId) => {
-      const response = await fetch(`${API_URL}/platos/${platoId}/extras`, {
+      const response = await fetch(`${API_URL}/extras/plato/${platoId}`, {
         headers: headers(),
       });
       if (!response.ok) {
@@ -132,6 +146,12 @@ export const api: ApiEndpoints = {
         headers: headers(),
       });
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          throw new Error('Session expired');
+        }
         throw new Error('Error fetching orders');
       }
       return response.json();
@@ -160,7 +180,7 @@ export const api: ApiEndpoints = {
     },
     updateStatus: async (id, estado) => {
       const response = await fetch(`${API_URL}/pedidos/${id}/estado`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: headers(),
         body: JSON.stringify({ estado }),
       });
@@ -176,6 +196,12 @@ export const api: ApiEndpoints = {
         headers: headers(),
       });
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          throw new Error('Session expired');
+        }
         throw new Error('Error fetching tables');
       }
       return response.json();
@@ -198,6 +224,12 @@ export const api: ApiEndpoints = {
         headers: headers(),
       });
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          throw new Error('Session expired');
+        }
         throw new Error('Error fetching users');
       }
       return response.json();
