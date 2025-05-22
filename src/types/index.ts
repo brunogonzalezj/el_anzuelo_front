@@ -6,6 +6,7 @@ export interface User {
   nombre: string;
   apellido: string;
   username: string;
+    password: string;
   rol: Role;
   estado: Status;
 }
@@ -20,6 +21,11 @@ export interface MenuItem {
 }
 
 export interface Extra {
+  extra?: {
+    id: number;
+    nombre: string;
+    descripcion: string;
+  }
   id: number;
   nombre: string;
   descripcion: string;
@@ -29,7 +35,7 @@ export interface Table {
   id: number;
   numero: number;
   sector: 'A' | 'B' | 'C';
-  estado: 'DISPONIBLE' | 'RESERVADA' | 'OCUPADA';
+  estado: 'DISPONIBLE' | 'RESERVADA' | 'OCUPADA' | undefined
   capacidad: number;
 }
 
@@ -38,7 +44,7 @@ export interface Reservation {
   nombreCliente: string;
   fecha: string;
   hora: string;
-  cantidadPersonas: number;
+  cantPersonas: number;
   sector: 'A' | 'B' | 'C';
   telefono: string;
 }
@@ -122,6 +128,7 @@ export interface ApiEndpoints {
   tables: {
     getAll: () => Promise<Table[]>;
     update: (id: number, table: Partial<Table>) => Promise<Table>;
+    create: (table: Omit<Table, 'id'>) => Promise<Table>;
   };
   reservations: {
     getAll: () => Promise<Reservation[]>;

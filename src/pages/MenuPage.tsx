@@ -3,14 +3,16 @@ import { Plus, Edit, Trash } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
 import { useStore } from '../store/useStore';
-import type { MenuItem, Extra } from '../types';
+import type {MenuItem, Extra, InventoryItem} from '../types';
 
 export function MenuPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isExtrasModalOpen, setIsExtrasModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  
+  const [inventoryExtras, setInventoryExtras] = useState<InventoryItem[]>([]);
+
+
   const menuItems = useStore((state) => state.menu);
   const extras = useStore((state) => state.extras);
   const fetchMenu = useStore((state) => state.fetchMenu);
@@ -19,8 +21,9 @@ export function MenuPage() {
   const updateMenuItem = useStore((state) => state.updateMenuItem);
   const removeMenuItem = useStore((state) => state.removeMenuItem);
   const addExtra = useStore((state) => state.addExtra);
-  const updateExtra = useStore((state) => state.updateExtra);
   const removeExtra = useStore((state) => state.removeExtra);
+    const fetchInventory = useStore((state) => state.fetchInventory);
+
 
   const [newDish, setNewDish] = useState({
     nombre: '',
@@ -39,6 +42,8 @@ export function MenuPage() {
     const loadData = async () => {
       try {
         await Promise.all([fetchMenu(), fetchExtras()]);
+        console.log('Data loaded successfully');
+        console.log('Menu Items:', menuItems);
       } catch (error) {
         console.error('Error loading data:', error);
       }
@@ -71,8 +76,8 @@ export function MenuPage() {
       return {
         ...prev,
         extras: isSelected
-          ? prev.extras.filter(id => id !== extraId)
-          : [...prev.extras, extraId]
+            ? prev.extras.filter(id => id !== extraId)
+            : [...prev.extras, extraId]
       };
     });
   };
@@ -84,7 +89,11 @@ export function MenuPage() {
       categoria: item.categoria,
       precio: item.precio.toString(),
       descripcion: item.descripcion,
-      extras: item.extras?.map(extra => extra.id) || []
+      extras: item.extras ?
+          item.extras.map(extra => {
+            // Manejar ambos formatos posibles de los extras
+            return extra.extra?.id || extra.id;
+          }) : []
     });
     setIsEditMode(true);
     setIsModalOpen(true);
@@ -167,6 +176,19 @@ export function MenuPage() {
     });
   };
 
+  useEffect(() => {
+    const fetchExtrasFromInventory = async () => {
+      try {
+        const allItems = await fetchInventory();
+        const filteredExtras = allItems.filter((item: InventoryItem) => item.categoria === "ACOMPAÑAMIENTOS");
+        setInventoryExtras(filteredExtras);
+      } catch (error) {
+        console.error("Error fetching extras from inventory:", error);
+      }
+    };
+    fetchExtrasFromInventory();
+  }, [fetchInventory]);
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -209,10 +231,11 @@ export function MenuPage() {
                   <div className="flex flex-wrap gap-1 mt-1">
                     {item.extras.map((extra) => (
                       <span
-                        key={extra.id}
+                        key={extra.extra?.id}
                         className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
                       >
-                        {extra.nombre}
+
+                        {extra.extra?.nombre}
                       </span>
                     ))}
                   </div>
@@ -345,10 +368,10 @@ export function MenuPage() {
                       }`}
                     >
                       <input
-                        type="checkbox"
-                        checked={newDish.extras.includes(extra.id.toString())}
-                        onChange={() => handleExtraToggle(extra.id.toString())}
-                        className="mr-2"
+                          type="checkbox"
+                          checked={newDish.extras.includes(extra.id)}
+                          onChange={() => handleExtraToggle(extra.id)}
+                          className="mr-2"
                       />
                       <span>{extra.nombre}</span>
                     </label>
@@ -385,24 +408,29 @@ export function MenuPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Nombre
               </label>
-              <input
-                type="text"
-                name="nombre"
-                value={newExtra.nombre}
-                onChange={handleExtraInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                required
-              />
+              <select
+                  name="nombre"
+                  value={newExtra.nombre}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
+              >
+                <option value="">Seleccione un acompañamiento</option>
+                {inventoryExtras.map((item) => (
+                    <option key={item.id} value={item.nombre}>
+                      {item.nombre}
+                    </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Descripción
               </label>
               <textarea
-                name="descripcion"
-                value={newExtra.descripcion}
-                onChange={handleExtraInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  name="descripcion"
+                  value={newExtra.descripcion}
+                  onChange={handleExtraInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 rows={2}
                 required
               />

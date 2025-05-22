@@ -193,6 +193,17 @@ export const api: ApiEndpoints = {
       }
       return response.json();
     },
+    create: async (table) => {
+      const response = await fetch(`${API_URL}/mesas`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify(table),
+      });
+      if (!response.ok) {
+        throw new Error('Error creating table');
+      }
+      return response.json();
+    },
   },
   reservations: {
     getAll: async () => {

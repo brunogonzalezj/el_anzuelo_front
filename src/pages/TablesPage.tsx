@@ -12,12 +12,18 @@ export function TablesPage() {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const fetchTables = useStore((state) => state.fetchTables);
   const updateTableStatus = useStore((state) => state.updateTableStatus);
+  const createTable = useStore((state) => state.createTable);
 
-  const [newTable, setNewTable] = useState({
+  const [newTable, setNewTable] = useState<{
+    numero: string;
+    sector: string;
+    capacidad: string;
+    estado: 'DISPONIBLE' | 'OCUPADA' | 'RESERVADA';
+  }>({
     numero: '',
     sector: 'A',
     capacidad: '',
-    estado: 'DISPONIBLE' as const,
+    estado: 'DISPONIBLE',
   });
 
   useEffect(() => {
@@ -62,12 +68,21 @@ export function TablesPage() {
     e.preventDefault();
     try {
       if (isEditMode && selectedTable) {
-        await updateTableStatus(selectedTable.id, {
-          numero: parseInt(newTable.numero),
-          sector: newTable.sector as 'A' | 'B' | 'C',
-          capacidad: parseInt(newTable.capacidad),
-          estado: newTable.estado,
-        });
+        // Asumiendo que updateTableStatus espera (id, estado)
+        await updateTableStatus(
+            selectedTable.id,
+            newTable.estado as 'DISPONIBLE' | 'OCUPADA' | 'RESERVADA'
+        );
+
+        const updatedTables = await fetchTables();
+        setTables(updatedTables);
+      } else {
+        await createTable({
+            numero: parseInt(newTable.numero),
+            sector: newTable.sector as 'A' | 'B' | 'C',
+            capacidad: parseInt(newTable.capacidad),
+            estado: newTable.estado,
+        })
         const updatedTables = await fetchTables();
         setTables(updatedTables);
       }
@@ -83,7 +98,7 @@ export function TablesPage() {
       numero: table.numero.toString(),
       sector: table.sector,
       capacidad: table.capacidad.toString(),
-      estado: table.estado,
+      estado: table.estado || 'DISPONIBLE', // Valor por defecto si es undefined
     });
     setIsEditMode(true);
     setIsModalOpen(true);
@@ -166,15 +181,15 @@ export function TablesPage() {
                 Estado
               </label>
               <select
-                className="w-full px-3 py-2 border rounded-md"
-                value={newTable.estado}
-                onChange={e =>
-                  setNewTable(prev => ({
-                    ...prev,
-                    estado: e.target.value as Table['estado'],
-                  }))
-                }
-                required
+                  className="w-full px-3 py-2 border rounded-md"
+                  value={newTable.estado}
+                  onChange={e =>
+                      setNewTable(prev => ({
+                        ...prev,
+                        estado: e.target.value as 'DISPONIBLE' | 'OCUPADA' | 'RESERVADA',
+                      }))
+                  }
+                  required
               >
                 <option value="DISPONIBLE">Disponible</option>
                 <option value="OCUPADA">Ocupada</option>
@@ -208,12 +223,12 @@ export function TablesPage() {
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-medium">Mesa {table.numero}</span>
                       <span
-                        className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
-                          table.estado
-                        )}`}
+                          className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                              table.estado || 'DISPONIBLE'
+                          )}`}
                       >
-                        {getStatusLabel(table.estado)}
-                      </span>
+  {getStatusLabel(table.estado || 'DISPONIBLE')}
+</span>
                     </div>
                     <p className="text-sm text-gray-600 mb-3">
                       Capacidad: {table.capacidad} personas

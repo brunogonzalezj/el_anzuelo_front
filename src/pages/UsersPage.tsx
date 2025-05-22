@@ -20,6 +20,7 @@ export function UsersPage() {
     nombre: '',
     apellido: '',
     username: '',
+    password: '',
     rol: 'MESERO' as Role,
     estado: 'ACTIVO' as Status,
   });
@@ -66,6 +67,7 @@ export function UsersPage() {
       nombre: user.nombre,
       apellido: user.apellido,
       username: user.username,
+        password: '', // Password should not be editable
       rol: user.rol,
       estado: user.estado,
     });
@@ -93,6 +95,7 @@ export function UsersPage() {
       nombre: '',
       apellido: '',
       username: '',
+        password: '',
       rol: 'MESERO',
       estado: 'ACTIVO',
     });
@@ -154,6 +157,18 @@ export function UsersPage() {
                 onChange={e => setNewUser(prev => ({ ...prev, username: e.target.value }))}
                 required
               />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Contraseña
+                </label>
+                <input
+                    type="password"
+                    className="w-full px-3 py-2 border rounded-md"
+                    value={newUser.password}
+                    onChange={e => setNewUser(prev => ({ ...prev, password: e.target.value }))}
+                    required
+                />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

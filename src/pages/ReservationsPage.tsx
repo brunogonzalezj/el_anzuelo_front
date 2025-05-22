@@ -22,8 +22,8 @@ export function ReservationsPage() {
     nombreCliente: '',
     fecha: format(new Date(), 'yyyy-MM-dd'),
     hora: '',
-    cantidadPersonas: '',
-    sector: 'A' as const,
+    cantPersonas: '',
+    sector: 'A'  as 'A' | 'B' | 'C',
     telefono: '',
   });
 
@@ -47,7 +47,7 @@ export function ReservationsPage() {
           nombreCliente: newReservation.nombreCliente,
           fecha: newReservation.fecha,
           hora: newReservation.hora,
-          cantidadPersonas: parseInt(newReservation.cantidadPersonas),
+          cantPersonas: parseInt(newReservation.cantPersonas),
           sector: newReservation.sector,
           telefono: newReservation.telefono,
         });
@@ -56,7 +56,7 @@ export function ReservationsPage() {
           nombreCliente: newReservation.nombreCliente,
           fecha: newReservation.fecha,
           hora: newReservation.hora,
-          cantidadPersonas: parseInt(newReservation.cantidadPersonas),
+          cantPersonas: parseInt(newReservation.cantPersonas),
           sector: newReservation.sector,
           telefono: newReservation.telefono,
         });
@@ -75,7 +75,7 @@ export function ReservationsPage() {
       nombreCliente: reservation.nombreCliente,
       fecha: reservation.fecha,
       hora: reservation.hora,
-      cantidadPersonas: reservation.cantidadPersonas.toString(),
+      cantPersonas: reservation.cantPersonas,
       sector: reservation.sector,
       telefono: reservation.telefono,
     });
@@ -103,7 +103,7 @@ export function ReservationsPage() {
       nombreCliente: '',
       fecha: format(new Date(), 'yyyy-MM-dd'),
       hora: '',
-      cantidadPersonas: '',
+      cantPersonas: '',
       sector: 'A',
       telefono: '',
     });
@@ -182,9 +182,9 @@ export function ReservationsPage() {
                 <input
                   type="number"
                   className="w-full px-3 py-2 border rounded-md"
-                  value={newReservation.cantidadPersonas}
+                  value={newReservation.cantPersonas}
                   onChange={e =>
-                    setNewReservation(prev => ({ ...prev, cantidadPersonas: e.target.value }))
+                    setNewReservation(prev => ({ ...prev, cantPersonas: e.target.value }))
                   }
                   required
                 />
@@ -277,7 +277,7 @@ export function ReservationsPage() {
                   <div className="text-sm text-gray-900">{reservation.hora}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{reservation.cantidadPersonas}</div>
+                  <div className="text-sm text-gray-900">{reservation.cantPersonas}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">Sector {reservation.sector}</div>
