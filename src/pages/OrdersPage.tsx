@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock, Check, ChefHat, Truck, Plus, Minus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
+import { useStore } from '../store/useStore';
 import type { Order, MenuItem } from '../types';
 
 export function OrdersPage() {
-  const [orders, setOrders] = useState("");
+  const [orders, setOrders] = useState<Order[]>([]);
+  const fetchOrders = useStore((state) => state.fetchOrders);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newOrder, setNewOrder] = useState({
-    type: 'dine-in' as const,
+    type: 'MESA' as const,
     tableNumber: '',
     items: [] as { menuItem: MenuItem; quantity: number; cookingPreference?: string }[],
     note: '',
@@ -20,11 +22,17 @@ export function OrdersPage() {
     }
   });
 
+  useEffect(() => {
+    fetchOrders().then(fetchedOrders => {
+      setOrders(fetchedOrders || []);
+    });
+  }, [fetchOrders]);
+
   const statusMap = {
-    pending: { label: 'Pendiente', icon: Clock, color: 'text-yellow-600 bg-yellow-50' },
-    preparing: { label: 'Preparando', icon: ChefHat, color: 'text-blue-600 bg-blue-50' },
-    ready: { label: 'Listo', icon: Check, color: 'text-green-600 bg-green-50' },
-    delivered: { label: 'Entregado', icon: Truck, color: 'text-gray-600 bg-gray-50' },
+    PENDIENTE: { label: 'Pendiente', icon: Clock, color: 'text-yellow-600 bg-yellow-50' },
+    PREPARANDO: { label: 'Preparando', icon: ChefHat, color: 'text-blue-600 bg-blue-50' },
+    LISTO: { label: 'Listo', icon: Check, color: 'text-green-600 bg-green-50' },
+    ENTREGADO: { label: 'Entregado', icon: Truck, color: 'text-gray-600 bg-gray-50' },
   };
 
   const handleStatusChange = (orderId: string, newStatus: Order['status']) => {
@@ -39,15 +47,15 @@ export function OrdersPage() {
 
   const getNextStatus = (currentStatus: Order['status']): Order['status'] | null => {
     const statusFlow = {
-      pending: 'preparing',
-      preparing: 'ready',
-      ready: 'delivered',
-      delivered: null,
+      PENDIENTE: 'PREPARANDO',
+      PREPARANDO: 'LISTO',
+      LISTO: 'ENTREGADO',
+      ENTREGADO: null,
     };
     return statusFlow[currentStatus] || null;
   };
 
-  const handleOrderTypeChange = (type: 'dine-in' | 'delivery') => {
+  const handleOrderTypeChange = (type: 'MESA' | 'DELIVERY') => {
     setNewOrder(prev => ({ ...prev, type }));
   };
 
@@ -104,15 +112,15 @@ export function OrdersPage() {
     const newOrderData: Order = {
       id: Math.random().toString(36).substr(2, 9),
       ...newOrder,
-      status: 'pending',
-      total: total + (newOrder.type === 'delivery' ? newOrder.deliveryInfo.deliveryFee : 0),
+      status: 'PENDIENTE',
+      total: total + (newOrder.type === 'DELIVERY' ? newOrder.deliveryInfo.deliveryFee : 0),
       createdAt: new Date(),
     };
 
     setOrders(prev => [...prev, newOrderData]);
     setIsModalOpen(false);
     setNewOrder({
-      type: 'dine-in',
+      type: 'MESA',
       tableNumber: '',
       items: [],
       note: '',
@@ -150,14 +158,14 @@ export function OrdersPage() {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-lg font-semibold">
-                      {order.type === 'delivery' ? 'Delivery' : `Mesa ${order.tableNumber}`}
+                      {order.type === 'DELIVERY' ? 'Delivery' : `Mesa ${order.tableNumber}`}
                     </span>
                     <span className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${status.color}`}>
                       <StatusIcon size={16} />
                       {status.label}
                     </span>
                   </div>
-                  {order.type === 'delivery' && order.deliveryInfo && (
+                  {order.type === 'DELIVERY' && order.deliveryInfo && (
                     <div className="text-sm text-gray-600">
                       <p>Cliente: {order.deliveryInfo.customerName}</p>
                       <p>Dirección: {order.deliveryInfo.address}</p>
@@ -219,28 +227,28 @@ export function OrdersPage() {
               <button
                 type="button"
                 className={`flex-1 py-2 px-4 rounded-lg border ${
-                  newOrder.type === 'dine-in'
+                  newOrder.type === 'MESA'
                     ? 'bg-blue-50 border-blue-500 text-blue-600'
                     : 'hover:bg-gray-50'
                 }`}
-                onClick={() => handleOrderTypeChange('dine-in')}
+                onClick={() => handleOrderTypeChange('MESA')}
               >
                 Para Mesa
               </button>
               <button
                 type="button"
                 className={`flex-1 py-2 px-4 rounded-lg border ${
-                  newOrder.type === 'delivery'
+                  newOrder.type === 'DELIVERY'
                     ? 'bg-blue-50 border-blue-500 text-blue-600'
                     : 'hover:bg-gray-50'
                 }`}
-                onClick={() => handleOrderTypeChange('delivery')}
+                onClick={() => handleOrderTypeChange('DELIVERY')}
               >
                 Delivery
               </button>
             </div>
 
-            {newOrder.type === 'dine-in' ? (
+            {newOrder.type === 'MESA' ? (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Mesa
@@ -414,7 +422,7 @@ export function OrdersPage() {
               </Button>
               <Button
                 type="submit"
-                disabled={newOrder.items.length === 0 || (newOrder.type === 'dine-in' && !newOrder.tableNumber)}
+                disabled={newOrder.items.length === 0 || (newOrder.type === 'MESA' && !newOrder.tableNumber)}
               >
                 Crear Pedido
               </Button>
