@@ -76,6 +76,15 @@ export interface Order {
   repartidor?: User;
 }
 
+export interface InventoryItem {
+  id: number;
+  nombre: string;
+  categoria: 'PESCADOS' | 'MARISCOS' | 'ACOMPAÑAMIENTOS' | 'INSUMOS';
+  stock: number;
+  unidad: 'kg' | 'l' | 'unidad';
+  stockMinimo: number;
+}
+
 export interface AuthResponse {
   usuario: User;
   token: string;
@@ -124,6 +133,12 @@ export interface ApiEndpoints {
     getAll: () => Promise<User[]>;
     create: (user: Omit<User, 'id'>) => Promise<User>;
     update: (id: number, user: Partial<User>) => Promise<User>;
+    delete: (id: number) => Promise<void>;
+  };
+  inventory: {
+    getAll: () => Promise<InventoryItem[]>;
+    create: (item: Omit<InventoryItem, 'id'>) => Promise<InventoryItem>;
+    update: (id: number, item: Partial<InventoryItem>) => Promise<InventoryItem>;
     delete: (id: number) => Promise<void>;
   };
 }

@@ -278,4 +278,46 @@ export const api: ApiEndpoints = {
       }
     },
   },
+  inventory: {
+    getAll: async () => {
+      const response = await fetch(`${API_URL}/inventario`, {
+        headers: headers(),
+      });
+      if (!response.ok) {
+        throw new Error('Error fetching inventory');
+      }
+      return response.json();
+    },
+    create: async (item) => {
+      const response = await fetch(`${API_URL}/inventario`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify(item),
+      });
+      if (!response.ok) {
+        throw new Error('Error creating inventory item');
+      }
+      return response.json();
+    },
+    update: async (id, item) => {
+      const response = await fetch(`${API_URL}/inventario/${id}`, {
+        method: 'PUT',
+        headers: headers(),
+        body: JSON.stringify(item),
+      });
+      if (!response.ok) {
+        throw new Error('Error updating inventory item');
+      }
+      return response.json();
+    },
+    delete: async (id) => {
+      const response = await fetch(`${API_URL}/inventario/${id}`, {
+        method: 'DELETE',
+        headers: headers(),
+      });
+      if (!response.ok) {
+        throw new Error('Error deleting inventory item');
+      }
+    },
+  },
 };

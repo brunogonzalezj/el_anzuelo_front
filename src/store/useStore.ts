@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { MenuItem, Order, Table, User, Role, Extra, Reservation } from '../types';
+import type { MenuItem, Order, Table, User, Role, Extra, Reservation, InventoryItem } from '../types';
 import { api } from '../lib/api';
 
 interface AuthState {
@@ -56,7 +56,15 @@ interface UserState {
   removeUser: (id: number) => Promise<void>;
 }
 
-interface Store extends AuthState, MenuState, ExtrasState, OrderState, TableState, ReservationState, UserState {
+interface InventoryState {
+  inventory: InventoryItem[];
+  fetchInventory: () => Promise<InventoryItem[]>;
+  addInventoryItem: (item: Omit<InventoryItem, 'id'>) => Promise<void>;
+  updateInventoryItem: (id: number, item: Partial<InventoryItem>) => Promise<void>;
+  removeInventoryItem: (id: number) => Promise<void>;
+}
+
+interface Store extends AuthState, MenuState, ExtrasState, OrderState, TableState, ReservationState, UserState, InventoryState {
   hasAccess: (allowedRoles: Role[]) => boolean;
 }
 
@@ -214,6 +222,32 @@ export const useStore = create<Store>()(
         await api.users.delete(id);
         set((state) => ({
           users: state.users.filter((user) => user.id !== id),
+        }));
+      },
+
+      // Inventory State
+      inventory: [],
+      fetchInventory: async () => {
+        const inventory = await api.inventory.getAll();
+        set({ inventory });
+        return inventory;
+      },
+      addInventoryItem: async (item) => {
+        const newItem = await api.inventory.create(item);
+        set((state) => ({ inventory: [...state.inventory, newItem] }));
+      },
+      updateInventoryItem: async (id, item) => {
+        const updatedItem = await api.inventory.update(id, item);
+        set((state) => ({
+          inventory: state.inventory.map((i) =>
+            i.id === id ? updatedItem : i
+          ),
+        }));
+      },
+      removeInventoryItem: async (id) => {
+        await api.inventory.delete(id);
+        set((state) => ({
+          inventory: state.inventory.filter((item) => item.id !== id),
         }));
       },
 
