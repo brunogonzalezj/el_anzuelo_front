@@ -1,28 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, PencilIcon, Trash } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
+import { useStore } from '../store/useStore';
 import type { Table } from '../types';
 
 export function TablesPage() {
-  const [tables, setTables] = useState("");
+  const [tables, setTables] = useState<Table[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
+  const fetchTables = useStore((state) => state.fetchTables);
+  const updateTableStatus = useStore((state) => state.updateTableStatus);
+
   const [newTable, setNewTable] = useState({
-    number: '',
+    numero: '',
     sector: 'A',
-    seats: '',
-    status: 'DISPONIBLE' as const,
+    capacidad: '',
+    estado: 'DISPONIBLE' as const,
   });
+
+  useEffect(() => {
+    const loadTables = async () => {
+      try {
+        const tablesData = await fetchTables();
+        setTables(tablesData || []);
+      } catch (error) {
+        console.error('Error loading tables:', error);
+      }
+    };
+    loadTables();
+  }, [fetchTables]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'DISPONIBLE':
         return 'bg-green-100 text-green-800';
-      case 'OCUPADO':
+      case 'OCUPADA':
         return 'bg-red-100 text-red-800';
-      case 'RESERVADO':
+      case 'RESERVADA':
         return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -33,62 +49,44 @@ export function TablesPage() {
     switch (status) {
       case 'DISPONIBLE':
         return 'Disponible';
-      case 'OCUPADO':
+      case 'OCUPADA':
         return 'Ocupada';
-      case 'RESERVADO':
+      case 'RESERVADA':
         return 'Reservada';
       default:
         return status;
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isEditMode && selectedTable) {
-      setTables(prev =>
-        prev.map(table =>
-          table.id === selectedTable.id
-            ? {
-                ...table,
-                number: parseInt(newTable.number),
-                sector: newTable.sector as 'A' | 'B' | 'C',
-                seats: parseInt(newTable.seats),
-                status: newTable.status,
-              }
-            : table
-        )
-      );
-    } else {
-      setTables(prev => [
-        ...prev,
-        {
-          id: Math.random().toString(36).substr(2, 9),
-          number: parseInt(newTable.number),
+    try {
+      if (isEditMode && selectedTable) {
+        await updateTableStatus(selectedTable.id, {
+          numero: parseInt(newTable.numero),
           sector: newTable.sector as 'A' | 'B' | 'C',
-          seats: parseInt(newTable.seats),
-          status: newTable.status,
-        },
-      ]);
+          capacidad: parseInt(newTable.capacidad),
+          estado: newTable.estado,
+        });
+        const updatedTables = await fetchTables();
+        setTables(updatedTables);
+      }
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error saving table:', error);
     }
-    handleCloseModal();
   };
 
   const handleEdit = (table: Table) => {
     setSelectedTable(table);
     setNewTable({
-      number: table.numero.toString(),
+      numero: table.numero.toString(),
       sector: table.sector,
-      seats: table.capacidad.toString(),
-      status: table.estado,
+      capacidad: table.capacidad.toString(),
+      estado: table.estado,
     });
     setIsEditMode(true);
     setIsModalOpen(true);
-  };
-
-  const handleDelete = (table: Table) => {
-    if (window.confirm('¿Está seguro que desea eliminar esta mesa?')) {
-      setTables(prev => prev.filter(t => t.id !== table.id));
-    }
   };
 
   const handleCloseModal = () => {
@@ -96,10 +94,10 @@ export function TablesPage() {
     setIsEditMode(false);
     setSelectedTable(null);
     setNewTable({
-      number: '',
+      numero: '',
       sector: 'A',
-      seats: '',
-      status: 'available',
+      capacidad: '',
+      estado: 'DISPONIBLE',
     });
   };
 
@@ -131,8 +129,8 @@ export function TablesPage() {
               <input
                 type="number"
                 className="w-full px-3 py-2 border rounded-md"
-                value={newTable.number}
-                onChange={e => setNewTable(prev => ({ ...prev, number: e.target.value }))}
+                value={newTable.numero}
+                onChange={e => setNewTable(prev => ({ ...prev, numero: e.target.value }))}
                 required
               />
             </div>
@@ -158,8 +156,8 @@ export function TablesPage() {
               <input
                 type="number"
                 className="w-full px-3 py-2 border rounded-md"
-                value={newTable.seats}
-                onChange={e => setNewTable(prev => ({ ...prev, seats: e.target.value }))}
+                value={newTable.capacidad}
+                onChange={e => setNewTable(prev => ({ ...prev, capacidad: e.target.value }))}
                 required
               />
             </div>
@@ -169,18 +167,18 @@ export function TablesPage() {
               </label>
               <select
                 className="w-full px-3 py-2 border rounded-md"
-                value={newTable.status}
+                value={newTable.estado}
                 onChange={e =>
                   setNewTable(prev => ({
                     ...prev,
-                    status: e.target.value as Table['status'],
+                    estado: e.target.value as Table['estado'],
                   }))
                 }
                 required
               >
-                <option value="available">Disponible</option>
-                <option value="occupied">Ocupada</option>
-                <option value="reserved">Reservada</option>
+                <option value="DISPONIBLE">Disponible</option>
+                <option value="OCUPADA">Ocupada</option>
+                <option value="RESERVADA">Reservada</option>
               </select>
             </div>
             <DialogFooter>
@@ -208,17 +206,17 @@ export function TablesPage() {
                     className="border rounded-lg p-4 hover:border-blue-500 transition-colors"
                   >
                     <div className="flex justify-between items-center mb-2">
-                      <span className="font-medium">Mesa {table.number}</span>
+                      <span className="font-medium">Mesa {table.numero}</span>
                       <span
                         className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
-                          table.status
+                          table.estado
                         )}`}
                       >
-                        {getStatusLabel(table.status)}
+                        {getStatusLabel(table.estado)}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 mb-3">
-                      Capacidad: {table.seats} personas
+                      Capacidad: {table.capacidad} personas
                     </p>
                     <div className="flex justify-end gap-2">
                       <button
@@ -226,12 +224,6 @@ export function TablesPage() {
                         onClick={() => handleEdit(table)}
                       >
                         <PencilIcon size={18} />
-                      </button>
-                      <button
-                        className="text-red-600 hover:bg-red-50 p-2 rounded"
-                        onClick={() => handleDelete(table)}
-                      >
-                        <Trash size={18} />
                       </button>
                     </div>
                   </div>
