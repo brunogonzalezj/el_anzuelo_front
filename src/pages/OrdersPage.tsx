@@ -8,38 +8,43 @@ import type { Order, MenuItem, Table } from '../types';
 export function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [tables, setTables] = useState<Table[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  
   const fetchOrders = useStore((state) => state.fetchOrders);
   const fetchTables = useStore((state) => state.fetchTables);
+  const fetchMenu = useStore((state) => state.fetchMenu);
+  const addOrder = useStore((state) => state.addOrder);
+  const updateOrderStatus = useStore((state) => state.updateOrderStatus);
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newOrder, setNewOrder] = useState({
-    type: 'MESA' as const,
-    tableNumber: '',
-    items: [] as { menuItem: MenuItem; quantity: number; cookingPreference?: string }[],
-    note: '',
-    deliveryInfo: {
-      customerName: '',
-      address: '',
-      phone: '',
-      deliveryFee: 10
-    }
+    tipoPedido: 'MESA' as const,
+    mesaId: '',
+    detalles: [] as { platoId: number; cantidad: number; subtotal: number }[],
+    nota: '',
+    nombreCliente: '',
+    direccionCliente: '',
+    telefonoCliente: '',
+    estado: 'PENDIENTE' as const
   });
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [ordersData, tablesData] = await Promise.all([
+        const [ordersData, tablesData, menuData] = await Promise.all([
           fetchOrders(),
-          fetchTables()
+          fetchTables(),
+          fetchMenu()
         ]);
-        setOrders(ordersData || []);
-        setTables(tablesData || []);
+        setOrders(ordersData);
+        setTables(tablesData);
+        setMenuItems(menuData);
       } catch (error) {
         console.error('Error loading data:', error);
       }
     };
-    
     loadData();
-  }, [fetchOrders, fetchTables]);
+  }, [fetchOrders, fetchTables, fetchMenu]);
 
   const statusMap = {
     PENDIENTE: { label: 'Pendiente', icon: Clock, color: 'text-yellow-600 bg-yellow-50' },
@@ -48,14 +53,14 @@ export function OrdersPage() {
     ENTREGADO: { label: 'Entregado', icon: Truck, color: 'text-gray-600 bg-gray-50' },
   };
 
-  const handleStatusChange = (orderId: string, newStatus: Order['estado']) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === orderId
-          ? { ...order, estado: newStatus }
-          : order
-      )
-    );
+  const handleStatusChange = async (orderId: number, newStatus: Order['estado']) => {
+    try {
+      await updateOrderStatus(orderId, newStatus);
+      const updatedOrders = await fetchOrders();
+      setOrders(updatedOrders);
+    } catch (error) {
+      console.error('Error updating order status:', error);
+    }
   };
 
   const getNextStatus = (currentStatus: Order['estado']): Order['estado'] | null => {
@@ -69,89 +74,96 @@ export function OrdersPage() {
   };
 
   const handleOrderTypeChange = (type: 'MESA' | 'DELIVERY') => {
-    setNewOrder(prev => ({ ...prev, type }));
+    setNewOrder(prev => ({ ...prev, tipoPedido: type }));
   };
 
   const handleAddItem = (menuItem: MenuItem) => {
     setNewOrder(prev => {
-      const existingItem = prev.items.find(item => item.menuItem.id === menuItem.id);
+      const existingItem = prev.detalles.find(item => item.platoId === menuItem.id);
       if (existingItem) {
         return {
           ...prev,
-          items: prev.items.map(item =>
-            item.menuItem.id === menuItem.id
-              ? { ...item, quantity: item.quantity + 1 }
+          detalles: prev.detalles.map(item =>
+            item.platoId === menuItem.id
+              ? { 
+                  ...item, 
+                  cantidad: item.cantidad + 1,
+                  subtotal: (item.cantidad + 1) * menuItem.precio
+                }
               : item
           )
         };
       }
       return {
         ...prev,
-        items: [...prev.items, { menuItem, quantity: 1 }]
+        detalles: [...prev.detalles, { 
+          platoId: menuItem.id, 
+          cantidad: 1,
+          subtotal: menuItem.precio
+        }]
       };
     });
   };
 
-  const handleRemoveItem = (menuItemId: string) => {
+  const handleRemoveItem = (platoId: number) => {
     setNewOrder(prev => ({
       ...prev,
-      items: prev.items.filter(item => item.menuItem.id !== menuItemId)
+      detalles: prev.detalles.filter(item => item.platoId !== platoId)
     }));
   };
 
-  const handleQuantityChange = (menuItemId: string, delta: number) => {
+  const handleQuantityChange = (platoId: number, delta: number) => {
     setNewOrder(prev => ({
       ...prev,
-      items: prev.items.map(item => {
-        if (item.menuItem.id === menuItemId) {
-          const newQuantity = item.quantity + delta;
+      detalles: prev.detalles.map(item => {
+        if (item.platoId === platoId) {
+          const newQuantity = item.cantidad + delta;
           if (newQuantity <= 0) {
             return item;
           }
-          return { ...item, quantity: newQuantity };
+          const menuItem = menuItems.find(m => m.id === platoId);
+          return { 
+            ...item, 
+            cantidad: newQuantity,
+            subtotal: newQuantity * (menuItem?.precio || 0)
+          };
         }
         return item;
       })
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const total = newOrder.items.reduce(
-      (sum, item) => sum + item.menuItem.precio * item.quantity,
-      0
-    );
+    try {
+      const total = newOrder.detalles.reduce((sum, item) => sum + item.subtotal, 0);
+      
+      await addOrder({
+        ...newOrder,
+        total,
+        estado: 'PENDIENTE',
+        mesaId: newOrder.tipoPedido === 'MESA' ? parseInt(newOrder.mesaId) : undefined
+      });
 
-    const newOrderData: Partial<Order> = {
-      tipoPedido: newOrder.type,
-      estado: 'PENDIENTE',
-      total: total + (newOrder.type === 'DELIVERY' ? newOrder.deliveryInfo.deliveryFee : 0),
-      mesaId: newOrder.type === 'MESA' ? parseInt(newOrder.tableNumber) : undefined,
-      nombreCliente: newOrder.type === 'DELIVERY' ? newOrder.deliveryInfo.customerName : undefined,
-      direccionCliente: newOrder.type === 'DELIVERY' ? newOrder.deliveryInfo.address : undefined,
-      telefonoCliente: newOrder.type === 'DELIVERY' ? newOrder.deliveryInfo.phone : undefined,
-      detalles: newOrder.items.map(item => ({
-        platoId: item.menuItem.id,
-        cantidad: item.quantity,
-        subtotal: item.menuItem.precio * item.quantity
-      }))
-    };
+      const updatedOrders = await fetchOrders();
+      setOrders(updatedOrders);
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error creating order:', error);
+    }
+  };
 
-    // Here you would typically call the API to create the order
-    console.log('New order:', newOrderData);
-
+  const handleCloseModal = () => {
     setIsModalOpen(false);
     setNewOrder({
-      type: 'MESA',
-      tableNumber: '',
-      items: [],
-      note: '',
-      deliveryInfo: {
-        customerName: '',
-        address: '',
-        phone: '',
-        deliveryFee: 10
-      }
+      tipoPedido: 'MESA',
+      mesaId: '',
+      detalles: [],
+      nota: '',
+      nombreCliente: '',
+      direccionCliente: '',
+      telefonoCliente: '',
+      estado: 'PENDIENTE'
     });
   };
 
@@ -203,7 +215,7 @@ export function OrdersPage() {
                   {nextStatus && (
                     <button
                       className="text-sm px-3 py-1 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors"
-                      onClick={() => handleStatusChange(order.id.toString(), nextStatus)}
+                      onClick={() => handleStatusChange(order.id, nextStatus)}
                     >
                       Marcar como {statusMap[nextStatus].label}
                     </button>
@@ -241,7 +253,7 @@ export function OrdersPage() {
               <button
                 type="button"
                 className={`flex-1 py-2 px-4 rounded-lg border ${
-                  newOrder.type === 'MESA'
+                  newOrder.tipoPedido === 'MESA'
                     ? 'bg-blue-50 border-blue-500 text-blue-600'
                     : 'hover:bg-gray-50'
                 }`}
@@ -252,7 +264,7 @@ export function OrdersPage() {
               <button
                 type="button"
                 className={`flex-1 py-2 px-4 rounded-lg border ${
-                  newOrder.type === 'DELIVERY'
+                  newOrder.tipoPedido === 'DELIVERY'
                     ? 'bg-blue-50 border-blue-500 text-blue-600'
                     : 'hover:bg-gray-50'
                 }`}
@@ -262,15 +274,15 @@ export function OrdersPage() {
               </button>
             </div>
 
-            {newOrder.type === 'MESA' ? (
+            {newOrder.tipoPedido === 'MESA' ? (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Mesa
                 </label>
                 <select
                   className="w-full px-3 py-2 border rounded-md"
-                  value={newOrder.tableNumber}
-                  onChange={(e) => setNewOrder(prev => ({ ...prev, tableNumber: e.target.value }))}
+                  value={newOrder.mesaId}
+                  onChange={(e) => setNewOrder(prev => ({ ...prev, mesaId: e.target.value }))}
                   required
                 >
                   <option value="">Seleccionar mesa</option>
@@ -292,12 +304,9 @@ export function OrdersPage() {
                   <input
                     type="text"
                     className="w-full px-3 py-2 border rounded-md"
-                    value={newOrder.deliveryInfo.customerName}
+                    value={newOrder.nombreCliente}
                     onChange={(e) =>
-                      setNewOrder(prev => ({
-                        ...prev,
-                        deliveryInfo: { ...prev.deliveryInfo, customerName: e.target.value }
-                      }))
+                      setNewOrder(prev => ({ ...prev, nombreCliente: e.target.value }))
                     }
                     required
                   />
@@ -309,12 +318,9 @@ export function OrdersPage() {
                   <input
                     type="text"
                     className="w-full px-3 py-2 border rounded-md"
-                    value={newOrder.deliveryInfo.address}
+                    value={newOrder.direccionCliente}
                     onChange={(e) =>
-                      setNewOrder(prev => ({
-                        ...prev,
-                        deliveryInfo: { ...prev.deliveryInfo, address: e.target.value }
-                      }))
+                      setNewOrder(prev => ({ ...prev, direccionCliente: e.target.value }))
                     }
                     required
                   />
@@ -326,12 +332,9 @@ export function OrdersPage() {
                   <input
                     type="tel"
                     className="w-full px-3 py-2 border rounded-md"
-                    value={newOrder.deliveryInfo.phone}
+                    value={newOrder.telefonoCliente}
                     onChange={(e) =>
-                      setNewOrder(prev => ({
-                        ...prev,
-                        deliveryInfo: { ...prev.deliveryInfo, phone: e.target.value }
-                      }))
+                      setNewOrder(prev => ({ ...prev, telefonoCliente: e.target.value }))
                     }
                     required
                   />
@@ -342,57 +345,72 @@ export function OrdersPage() {
             <div>
               <h3 className="font-medium mb-2">Agregar Items</h3>
               <div className="grid grid-cols-2 gap-4 mb-4 max-h-48 overflow-y-auto">
-                {/* Here you would map through your menu items */}
+                {menuItems.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className="flex items-center p-4 border rounded-lg hover:bg-gray-50"
+                    onClick={() => handleAddItem(item)}
+                  >
+                    <div>
+                      <div className="font-medium">{item.nombre}</div>
+                      <div className="text-sm text-gray-600">Bs. {item.precio}</div>
+                    </div>
+                  </button>
+                ))}
               </div>
 
-              {newOrder.items.length > 0 && (
+              {newOrder.detalles.length > 0 && (
                 <div className="border rounded-lg p-4">
                   <h4 className="font-medium mb-2">Items Seleccionados</h4>
                   <div className="space-y-2">
-                    {newOrder.items.map((item) => (
-                      <div
-                        key={item.menuItem.id}
-                        className="flex items-center justify-between"
-                      >
-                        <div>
-                          <span className="font-medium">{item.menuItem.nombre}</span>
-                          <span className="text-gray-600 ml-2">
-                            Bs. {item.menuItem.precio * item.quantity}
-                          </span>
+                    {newOrder.detalles.map((item) => {
+                      const menuItem = menuItems.find(m => m.id === item.platoId);
+                      return menuItem ? (
+                        <div
+                          key={item.platoId}
+                          className="flex items-center justify-between"
+                        >
+                          <div>
+                            <span className="font-medium">{menuItem.nombre}</span>
+                            <span className="text-gray-600 ml-2">
+                              Bs. {item.subtotal}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              className="p-1 hover:bg-gray-100 rounded"
+                              onClick={() => handleQuantityChange(item.platoId, -1)}
+                            >
+                              <Minus size={16} />
+                            </button>
+                            <span>{item.cantidad}</span>
+                            <button
+                              type="button"
+                              className="p-1 hover:bg-gray-100 rounded"
+                              onClick={() => handleQuantityChange(item.platoId, 1)}
+                            >
+                              <Plus size={16} />
+                            </button>
+                            <button
+                              type="button"
+                              className="ml-2 text-red-600 hover:bg-red-50 p-1 rounded"
+                              onClick={() => handleRemoveItem(item.platoId)}
+                            >
+                              ×
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            className="p-1 hover:bg-gray-100 rounded"
-                            onClick={() => handleQuantityChange(item.menuItem.id.toString(), -1)}
-                          >
-                            <Minus size={16} />
-                          </button>
-                          <span>{item.quantity}</span>
-                          <button
-                            type="button"
-                            className="p-1 hover:bg-gray-100 rounded"
-                            onClick={() => handleQuantityChange(item.menuItem.id.toString(), 1)}
-                          >
-                            <Plus size={16} />
-                          </button>
-                          <button
-                            type="button"
-                            className="ml-2 text-red-600 hover:bg-red-50 p-1 rounded"
-                            onClick={() => handleRemoveItem(item.menuItem.id.toString())}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      ) : null;
+                    })}
                   </div>
                   <div className="mt-4 pt-4 border-t flex justify-between font-medium">
                     <span>Total</span>
                     <span>
                       Bs.{' '}
-                      {newOrder.items.reduce(
-                        (sum, item) => sum + item.menuItem.precio * item.quantity,
+                      {newOrder.detalles.reduce(
+                        (sum, item) => sum + item.subtotal,
                         0
                       )}
                     </span>
@@ -407,8 +425,8 @@ export function OrdersPage() {
               </label>
               <textarea
                 className="w-full px-3 py-2 border rounded-md"
-                value={newOrder.note}
-                onChange={(e) => setNewOrder(prev => ({ ...prev, note: e.target.value }))}
+                value={newOrder.nota}
+                onChange={(e) => setNewOrder(prev => ({ ...prev, nota: e.target.value }))}
                 placeholder="Especificaciones especiales del cliente..."
                 rows={3}
               />
@@ -424,7 +442,7 @@ export function OrdersPage() {
               </Button>
               <Button
                 type="submit"
-                disabled={newOrder.items.length === 0 || (newOrder.type === 'MESA' && !newOrder.tableNumber)}
+                disabled={newOrder.detalles.length === 0 || (newOrder.tipoPedido === 'MESA' && !newOrder.mesaId)}
               >
                 Crear Pedido
               </Button>
