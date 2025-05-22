@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, AlertTriangle, Plus, PencilIcon, Trash } from 'lucide-react';
+import { AlertTriangle, Plus, PencilIcon, Trash } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
 import { useStore } from '../store/useStore';
@@ -10,7 +10,7 @@ export function InventoryPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
-  
+
   const fetchInventory = useStore((state) => state.fetchInventory);
   const addInventoryItem = useStore((state) => state.addInventoryItem);
   const updateInventoryItem = useStore((state) => state.updateInventoryItem);
@@ -18,9 +18,9 @@ export function InventoryPage() {
 
   const [newItem, setNewItem] = useState({
     nombre: '',
-    categoria: 'PESCADOS' as const,
-    stock: '',
-    unidad: 'kg' as const,
+    categoria: 'PESCADOS' as InventoryItem['categoria'],
+    stockActual: '',
+    unidadMedida: 'kg' as InventoryItem['unidadMedida'],
     stockMinimo: '',
   });
 
@@ -39,8 +39,10 @@ export function InventoryPage() {
   const categories = {
     PESCADOS: 'Pescados',
     MARISCOS: 'Mariscos',
-    ACOMPAÑAMIENTOS: 'Acompañamientos',
+    EXTRAS: 'Extras',
     INSUMOS: 'Insumos',
+    LIMPIEZA: 'Limpieza',
+    VERDURAS: 'Verduras',
   };
 
   const units = {
@@ -56,16 +58,16 @@ export function InventoryPage() {
         await updateInventoryItem(selectedItem.id, {
           nombre: newItem.nombre,
           categoria: newItem.categoria,
-          stock: Number(newItem.stock),
-          unidad: newItem.unidad,
+          stockActual: Number(newItem.stockActual),
+          unidadMedida: newItem.unidadMedida,
           stockMinimo: Number(newItem.stockMinimo),
         });
       } else {
         await addInventoryItem({
           nombre: newItem.nombre,
           categoria: newItem.categoria,
-          stock: Number(newItem.stock),
-          unidad: newItem.unidad,
+          stockActual: Number(newItem.stockActual),
+          unidadMedida: newItem.unidadMedida,
           stockMinimo: Number(newItem.stockMinimo),
         });
       }
@@ -82,8 +84,8 @@ export function InventoryPage() {
     setNewItem({
       nombre: item.nombre,
       categoria: item.categoria,
-      stock: item.stock.toString(),
-      unidad: item.unidad,
+      stockActual: item.stockActual.toString(),
+      unidadMedida: item.unidadMedida,
       stockMinimo: item.stockMinimo.toString(),
     });
     setIsEditMode(true);
@@ -109,8 +111,8 @@ export function InventoryPage() {
     setNewItem({
       nombre: '',
       categoria: 'PESCADOS',
-      stock: '',
-      unidad: 'kg',
+      stockActual: '',
+      unidadMedida: 'kg',
       stockMinimo: '',
     });
   };
@@ -175,8 +177,8 @@ export function InventoryPage() {
                 <input
                   type="number"
                   className="w-full px-3 py-2 border rounded-md"
-                  value={newItem.stock}
-                  onChange={e => setNewItem(prev => ({ ...prev, stock: e.target.value }))}
+                  value={newItem.stockActual}
+                  onChange={e => setNewItem(prev => ({ ...prev, stockActual: e.target.value }))}
                   required
                 />
               </div>
@@ -186,8 +188,8 @@ export function InventoryPage() {
                 </label>
                 <select
                   className="w-full px-3 py-2 border rounded-md"
-                  value={newItem.unidad}
-                  onChange={e => setNewItem(prev => ({ ...prev, unidad: e.target.value as InventoryItem['unidad'] }))}
+                  value={newItem.unidadMedida}
+                  onChange={e => setNewItem(prev => ({ ...prev, unidadMedida: e.target.value as InventoryItem['unidadMedida'] }))}
                   required
                 >
                   {Object.entries(units).map(([value, label]) => (
@@ -239,11 +241,10 @@ export function InventoryPage() {
                     >
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="font-medium">{item.nombre}</h3>
-                        {item.stock < item.stockMinimo && (
+                        {item.stockActual < item.stockMinimo && (
                           <AlertTriangle
                             size={20}
                             className="text-yellow-500"
-                            title="Stock bajo"
                           />
                         )}
                       </div>
@@ -252,18 +253,18 @@ export function InventoryPage() {
                           <span className="text-gray-600">Stock Actual:</span>
                           <span
                             className={
-                              item.stock < item.stockMinimo
+                              item.stockActual < item.stockMinimo
                                 ? 'text-yellow-600 font-medium'
                                 : ''
                             }
                           >
-                            {item.stock} {units[item.unidad]}
+                            {item.stockActual} {units[item.unidadMedida]}
                           </span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Stock Mínimo:</span>
                           <span>
-                            {item.stockMinimo} {units[item.unidad]}
+                            {item.stockMinimo} {units[item.unidadMedida]}
                           </span>
                         </div>
                       </div>

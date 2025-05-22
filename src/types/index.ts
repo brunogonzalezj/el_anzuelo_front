@@ -80,8 +80,8 @@ export interface InventoryItem {
   id: number;
   nombre: string;
   categoria: 'PESCADOS' | 'MARISCOS' | 'ACOMPAÑAMIENTOS' | 'INSUMOS';
-  stock: number;
-  unidad: 'kg' | 'l' | 'unidad';
+  stockActual: number;
+  unidadMedida: 'kg' | 'l' | 'unidad';
   stockMinimo: number;
 }
 

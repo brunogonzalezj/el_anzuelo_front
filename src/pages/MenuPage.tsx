@@ -27,7 +27,7 @@ export function MenuPage() {
     categoria: 'fritos',
     precio: '',
     descripcion: '',
-    extras: [] as string[]
+    extras: [] as number[]
   });
 
   const [newExtra, setNewExtra] = useState({
@@ -65,7 +65,7 @@ export function MenuPage() {
     setNewExtra(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleExtraToggle = (extraId: string) => {
+  const handleExtraToggle = (extraId: number) => {
     setNewDish(prev => {
       const isSelected = prev.extras.includes(extraId);
       return {
@@ -84,7 +84,7 @@ export function MenuPage() {
       categoria: item.categoria,
       precio: item.precio.toString(),
       descripcion: item.descripcion,
-      extras: item.extras?.map(extra => extra.id.toString()) || []
+      extras: item.extras?.map(extra => extra.id) || []
     });
     setIsEditMode(true);
     setIsModalOpen(true);
@@ -339,7 +339,7 @@ export function MenuPage() {
                     <label
                       key={extra.id}
                       className={`flex items-center p-2 rounded border ${
-                        newDish.extras.includes(extra.id.toString())
+                        newDish.extras.includes(extra.id)
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-300'
                       }`}
