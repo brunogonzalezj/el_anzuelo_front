@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { PencilIcon, Trash, Plus } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+} from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -11,8 +17,9 @@ export function ReservationsPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
-  
+  const [selectedReservation, setSelectedReservation] =
+    useState<Reservation | null>(null);
+
   const fetchReservations = useStore((state) => state.fetchReservations);
   const addReservation = useStore((state) => state.addReservation);
   const updateReservation = useStore((state) => state.updateReservation);
@@ -23,7 +30,7 @@ export function ReservationsPage() {
     fecha: format(new Date(), 'yyyy-MM-dd'),
     hora: '',
     cantPersonas: '',
-    sector: 'A'  as 'A' | 'B' | 'C',
+    sector: 'A' as 'A' | 'B' | 'C',
     telefono: '',
   });
 
@@ -48,7 +55,7 @@ export function ReservationsPage() {
           fecha: newReservation.fecha,
           hora: newReservation.hora,
           cantPersonas: parseInt(newReservation.cantPersonas),
-          sector: newReservation.sector,
+          sectorPreferido: newReservation.sector,
           telefono: newReservation.telefono,
         });
       } else {
@@ -57,7 +64,7 @@ export function ReservationsPage() {
           fecha: newReservation.fecha,
           hora: newReservation.hora,
           cantPersonas: parseInt(newReservation.cantPersonas),
-          sector: newReservation.sector,
+          sectorPreferido: newReservation.sector,
           telefono: newReservation.telefono,
         });
       }
@@ -75,8 +82,8 @@ export function ReservationsPage() {
       nombreCliente: reservation.nombreCliente,
       fecha: reservation.fecha,
       hora: reservation.hora,
-      cantPersonas: reservation.cantPersonas,
-      sector: reservation.sector,
+      cantPersonas: reservation.cantPersonas.toString(),
+      sector: reservation.sectorPreferido,
       telefono: reservation.telefono,
     });
     setIsEditMode(true);
@@ -112,7 +119,9 @@ export function ReservationsPage() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Gestión de Reservas</h1>
+        <h1 className="text-2xl font-bold text-gray-800">
+          Gestión de Reservas
+        </h1>
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
           onClick={() => setIsModalOpen(true)}
@@ -138,8 +147,11 @@ export function ReservationsPage() {
                 type="text"
                 className="w-full px-3 py-2 border rounded-md"
                 value={newReservation.nombreCliente}
-                onChange={e =>
-                  setNewReservation(prev => ({ ...prev, nombreCliente: e.target.value }))
+                onChange={(e) =>
+                  setNewReservation((prev) => ({
+                    ...prev,
+                    nombreCliente: e.target.value,
+                  }))
                 }
                 required
               />
@@ -153,8 +165,11 @@ export function ReservationsPage() {
                   type="date"
                   className="w-full px-3 py-2 border rounded-md"
                   value={newReservation.fecha}
-                  onChange={e =>
-                    setNewReservation(prev => ({ ...prev, fecha: e.target.value }))
+                  onChange={(e) =>
+                    setNewReservation((prev) => ({
+                      ...prev,
+                      fecha: e.target.value,
+                    }))
                   }
                   required
                 />
@@ -167,8 +182,11 @@ export function ReservationsPage() {
                   type="time"
                   className="w-full px-3 py-2 border rounded-md"
                   value={newReservation.hora}
-                  onChange={e =>
-                    setNewReservation(prev => ({ ...prev, hora: e.target.value }))
+                  onChange={(e) =>
+                    setNewReservation((prev) => ({
+                      ...prev,
+                      hora: e.target.value,
+                    }))
                   }
                   required
                 />
@@ -183,8 +201,11 @@ export function ReservationsPage() {
                   type="number"
                   className="w-full px-3 py-2 border rounded-md"
                   value={newReservation.cantPersonas}
-                  onChange={e =>
-                    setNewReservation(prev => ({ ...prev, cantPersonas: e.target.value }))
+                  onChange={(e) =>
+                    setNewReservation((prev) => ({
+                      ...prev,
+                      cantPersonas: e.target.value,
+                    }))
                   }
                   required
                 />
@@ -196,8 +217,11 @@ export function ReservationsPage() {
                 <select
                   className="w-full px-3 py-2 border rounded-md"
                   value={newReservation.sector}
-                  onChange={e =>
-                    setNewReservation(prev => ({ ...prev, sector: e.target.value as 'A' | 'B' | 'C' }))
+                  onChange={(e) =>
+                    setNewReservation((prev) => ({
+                      ...prev,
+                      sector: e.target.value as 'A' | 'B' | 'C',
+                    }))
                   }
                   required
                 >
@@ -215,14 +239,21 @@ export function ReservationsPage() {
                 type="tel"
                 className="w-full px-3 py-2 border rounded-md"
                 value={newReservation.telefono}
-                onChange={e =>
-                  setNewReservation(prev => ({ ...prev, telefono: e.target.value }))
+                onChange={(e) =>
+                  setNewReservation((prev) => ({
+                    ...prev,
+                    telefono: e.target.value,
+                  }))
                 }
                 required
               />
             </div>
             <DialogFooter>
-              <Button type="button" variant="secondary" onClick={handleCloseModal}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleCloseModal}
+              >
                 Cancelar
               </Button>
               <Button type="submit">
@@ -261,7 +292,7 @@ export function ReservationsPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {reservations.map(reservation => (
+            {reservations.map((reservation) => (
               <tr key={reservation.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
@@ -270,20 +301,30 @@ export function ReservationsPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
-                    {format(new Date(reservation.fecha), 'dd/MM/yyyy', { locale: es })}
+                    {format(new Date(reservation.fecha), 'dd/MM/yyyy', {
+                      locale: es,
+                    })}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{reservation.hora}</div>
+                  <div className="text-sm text-gray-900">
+                    {reservation.hora}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{reservation.cantPersonas}</div>
+                  <div className="text-sm text-gray-900">
+                    {reservation.cantPersonas}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">Sector {reservation.sector}</div>
+                  <div className="text-sm text-gray-900">
+                    Sector {reservation.sectorPreferido}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{reservation.telefono}</div>
+                  <div className="text-sm text-gray-900">
+                    {reservation.telefono}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button

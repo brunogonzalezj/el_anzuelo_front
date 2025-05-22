@@ -175,6 +175,16 @@ export function OrdersPage() {
         0
       );
 
+      console.log({
+        ...newOrder,
+        total,
+        estado: 'PENDIENTE',
+        mesaId:
+          newOrder.tipoPedido === 'MESA'
+            ? parseInt(newOrder.mesaId)
+            : undefined,
+      })
+
       await addOrder({
         ...newOrder,
         total,

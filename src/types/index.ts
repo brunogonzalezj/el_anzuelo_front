@@ -6,7 +6,7 @@ export interface User {
   nombre: string;
   apellido: string;
   username: string;
-    password: string;
+  password: string;
   rol: Role;
   estado: Status;
 }
@@ -25,7 +25,7 @@ export interface Extra {
     id: number;
     nombre: string;
     descripcion: string;
-  }
+  };
   id: number;
   nombre: string;
   descripcion: string;
@@ -35,7 +35,7 @@ export interface Table {
   id: number;
   numero: number;
   sector: 'A' | 'B' | 'C';
-  estado: 'DISPONIBLE' | 'RESERVADA' | 'OCUPADA' | undefined
+  estado: 'DISPONIBLE' | 'RESERVADA' | 'OCUPADA' | undefined;
   capacidad: number;
 }
 
@@ -45,7 +45,7 @@ export interface Reservation {
   fecha: string;
   hora: string;
   cantPersonas: number;
-  sector: 'A' | 'B' | 'C';
+  sectorPreferido: 'A' | 'B' | 'C';
   telefono: string;
 }
 
@@ -115,7 +115,10 @@ export interface ApiEndpoints {
   extras: {
     getAll: () => Promise<Extra[]>;
     create: (extra: { nombre: string; descripcion: string }) => Promise<Extra>;
-    update: (id: number, extra: { nombre?: string; descripcion?: string }) => Promise<Extra>;
+    update: (
+      id: number,
+      extra: { nombre?: string; descripcion?: string }
+    ) => Promise<Extra>;
     delete: (id: number) => Promise<void>;
     getByPlato: (platoId: number) => Promise<Extra[]>;
   };
@@ -133,7 +136,10 @@ export interface ApiEndpoints {
   reservations: {
     getAll: () => Promise<Reservation[]>;
     create: (reservation: Omit<Reservation, 'id'>) => Promise<Reservation>;
-    update: (id: number, reservation: Partial<Reservation>) => Promise<Reservation>;
+    update: (
+      id: number,
+      reservation: Partial<Reservation>
+    ) => Promise<Reservation>;
     delete: (id: number) => Promise<void>;
   };
   users: {
@@ -145,7 +151,10 @@ export interface ApiEndpoints {
   inventory: {
     getAll: () => Promise<InventoryItem[]>;
     create: (item: Omit<InventoryItem, 'id'>) => Promise<InventoryItem>;
-    update: (id: number, item: Partial<InventoryItem>) => Promise<InventoryItem>;
+    update: (
+      id: number,
+      item: Partial<InventoryItem>
+    ) => Promise<InventoryItem>;
     delete: (id: number) => Promise<void>;
   };
 }
