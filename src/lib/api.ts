@@ -10,7 +10,7 @@ const headers = () => ({
 export const api: ApiEndpoints = {
   auth: {
     login: async (username: string, password: string) => {
-      const response = await fetch(`${API_URL}/auth/login`, {
+      const response = await fetch(`${API_URL}/usuarios/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -38,6 +38,9 @@ export const api: ApiEndpoints = {
       const response = await fetch(`${API_URL}/platos`, {
         headers: headers(),
       });
+      if (!response.ok) {
+        throw new Error('Error fetching menu items');
+      }
       return response.json();
     },
     create: async (item) => {
@@ -46,6 +49,9 @@ export const api: ApiEndpoints = {
         headers: headers(),
         body: JSON.stringify(item),
       });
+      if (!response.ok) {
+        throw new Error('Error creating menu item');
+      }
       return response.json();
     },
     update: async (id, item) => {
@@ -54,13 +60,19 @@ export const api: ApiEndpoints = {
         headers: headers(),
         body: JSON.stringify(item),
       });
+      if (!response.ok) {
+        throw new Error('Error updating menu item');
+      }
       return response.json();
     },
     delete: async (id) => {
-      await fetch(`${API_URL}/platos/${id}`, {
+      const response = await fetch(`${API_URL}/platos/${id}`, {
         method: 'DELETE',
         headers: headers(),
       });
+      if (!response.ok) {
+        throw new Error('Error deleting menu item');
+      }
     },
   },
   extras: {
@@ -68,6 +80,9 @@ export const api: ApiEndpoints = {
       const response = await fetch(`${API_URL}/extras`, {
         headers: headers(),
       });
+      if (!response.ok) {
+        throw new Error('Error fetching extras');
+      }
       return response.json();
     },
     create: async (extra) => {
@@ -76,6 +91,9 @@ export const api: ApiEndpoints = {
         headers: headers(),
         body: JSON.stringify(extra),
       });
+      if (!response.ok) {
+        throw new Error('Error creating extra');
+      }
       return response.json();
     },
     update: async (id, extra) => {
@@ -84,18 +102,27 @@ export const api: ApiEndpoints = {
         headers: headers(),
         body: JSON.stringify(extra),
       });
+      if (!response.ok) {
+        throw new Error('Error updating extra');
+      }
       return response.json();
     },
     delete: async (id) => {
-      await fetch(`${API_URL}/extras/${id}`, {
+      const response = await fetch(`${API_URL}/extras/${id}`, {
         method: 'DELETE',
         headers: headers(),
       });
+      if (!response.ok) {
+        throw new Error('Error deleting extra');
+      }
     },
     getByPlato: async (platoId) => {
       const response = await fetch(`${API_URL}/platos/${platoId}/extras`, {
         headers: headers(),
       });
+      if (!response.ok) {
+        throw new Error('Error fetching extras for plate');
+      }
       return response.json();
     },
   },
@@ -104,6 +131,9 @@ export const api: ApiEndpoints = {
       const response = await fetch(`${API_URL}/pedidos`, {
         headers: headers(),
       });
+      if (!response.ok) {
+        throw new Error('Error fetching orders');
+      }
       return response.json();
     },
     create: async (order) => {
@@ -112,6 +142,9 @@ export const api: ApiEndpoints = {
         headers: headers(),
         body: JSON.stringify(order),
       });
+      if (!response.ok) {
+        throw new Error('Error creating order');
+      }
       return response.json();
     },
     update: async (id, order) => {
@@ -120,6 +153,9 @@ export const api: ApiEndpoints = {
         headers: headers(),
         body: JSON.stringify(order),
       });
+      if (!response.ok) {
+        throw new Error('Error updating order');
+      }
       return response.json();
     },
     updateStatus: async (id, estado) => {
@@ -128,6 +164,9 @@ export const api: ApiEndpoints = {
         headers: headers(),
         body: JSON.stringify({ estado }),
       });
+      if (!response.ok) {
+        throw new Error('Error updating order status');
+      }
       return response.json();
     },
   },
@@ -136,6 +175,9 @@ export const api: ApiEndpoints = {
       const response = await fetch(`${API_URL}/mesas`, {
         headers: headers(),
       });
+      if (!response.ok) {
+        throw new Error('Error fetching tables');
+      }
       return response.json();
     },
     update: async (id, table) => {
@@ -144,6 +186,9 @@ export const api: ApiEndpoints = {
         headers: headers(),
         body: JSON.stringify(table),
       });
+      if (!response.ok) {
+        throw new Error('Error updating table');
+      }
       return response.json();
     },
   },
@@ -152,6 +197,9 @@ export const api: ApiEndpoints = {
       const response = await fetch(`${API_URL}/usuarios`, {
         headers: headers(),
       });
+      if (!response.ok) {
+        throw new Error('Error fetching users');
+      }
       return response.json();
     },
     create: async (user) => {
@@ -160,6 +208,9 @@ export const api: ApiEndpoints = {
         headers: headers(),
         body: JSON.stringify(user),
       });
+      if (!response.ok) {
+        throw new Error('Error creating user');
+      }
       return response.json();
     },
     update: async (id, user) => {
@@ -168,13 +219,19 @@ export const api: ApiEndpoints = {
         headers: headers(),
         body: JSON.stringify(user),
       });
+      if (!response.ok) {
+        throw new Error('Error updating user');
+      }
       return response.json();
     },
     delete: async (id) => {
-      await fetch(`${API_URL}/usuarios/${id}`, {
+      const response = await fetch(`${API_URL}/usuarios/${id}`, {
         method: 'DELETE',
         headers: headers(),
       });
+      if (!response.ok) {
+        throw new Error('Error deleting user');
+      }
     },
   },
 };
