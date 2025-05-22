@@ -1,106 +1,97 @@
-import React, { useState } from 'react';
-import { Calendar as CalendarIcon, PencilIcon, Trash, Plus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { PencilIcon, Trash, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-
-interface Reservation {
-  id: string;
-  customerName: string;
-  date: string;
-  time: string;
-  people: number;
-  sector: string;
-  phone: string;
-}
+import { useStore } from '../store/useStore';
+import type { Reservation } from '../types';
 
 export function ReservationsPage() {
-  const [reservations, setReservations] = useState<Reservation[]>([
-    {
-      id: '1',
-      customerName: 'Roberto Méndez',
-      date: '2024-03-20',
-      time: '19:00',
-      people: 4,
-      sector: 'A',
-      phone: '555-0101',
-    },
-    {
-      id: '2',
-      customerName: 'María Sánchez',
-      date: '2024-03-20',
-      time: '20:30',
-      people: 6,
-      sector: 'B',
-      phone: '555-0102',
-    },
-  ]);
-
+  const [reservations, setReservations] = useState<Reservation[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+  
+  const fetchReservations = useStore((state) => state.fetchReservations);
+  const addReservation = useStore((state) => state.addReservation);
+  const updateReservation = useStore((state) => state.updateReservation);
+  const removeReservation = useStore((state) => state.removeReservation);
+
   const [newReservation, setNewReservation] = useState({
-    customerName: '',
-    date: format(new Date(), 'yyyy-MM-dd'),
-    time: '',
-    people: '',
-    sector: 'A',
-    phone: '',
+    nombreCliente: '',
+    fecha: format(new Date(), 'yyyy-MM-dd'),
+    hora: '',
+    cantidadPersonas: '',
+    sector: 'A' as const,
+    telefono: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const loadReservations = async () => {
+      try {
+        const reservationsData = await fetchReservations();
+        setReservations(reservationsData);
+      } catch (error) {
+        console.error('Error loading reservations:', error);
+      }
+    };
+    loadReservations();
+  }, [fetchReservations]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isEditMode && selectedReservation) {
-      setReservations(prev =>
-        prev.map(reservation =>
-          reservation.id === selectedReservation.id
-            ? {
-                ...reservation,
-                customerName: newReservation.customerName,
-                date: newReservation.date,
-                time: newReservation.time,
-                people: parseInt(newReservation.people),
-                sector: newReservation.sector,
-                phone: newReservation.phone,
-              }
-            : reservation
-        )
-      );
-    } else {
-      setReservations(prev => [
-        ...prev,
-        {
-          id: Math.random().toString(36).substr(2, 9),
-          customerName: newReservation.customerName,
-          date: newReservation.date,
-          time: newReservation.time,
-          people: parseInt(newReservation.people),
+    try {
+      if (isEditMode && selectedReservation) {
+        await updateReservation(selectedReservation.id, {
+          nombreCliente: newReservation.nombreCliente,
+          fecha: newReservation.fecha,
+          hora: newReservation.hora,
+          cantidadPersonas: parseInt(newReservation.cantidadPersonas),
           sector: newReservation.sector,
-          phone: newReservation.phone,
-        },
-      ]);
+          telefono: newReservation.telefono,
+        });
+      } else {
+        await addReservation({
+          nombreCliente: newReservation.nombreCliente,
+          fecha: newReservation.fecha,
+          hora: newReservation.hora,
+          cantidadPersonas: parseInt(newReservation.cantidadPersonas),
+          sector: newReservation.sector,
+          telefono: newReservation.telefono,
+        });
+      }
+      const updatedReservations = await fetchReservations();
+      setReservations(updatedReservations);
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error saving reservation:', error);
     }
-    handleCloseModal();
   };
 
   const handleEdit = (reservation: Reservation) => {
     setSelectedReservation(reservation);
     setNewReservation({
-      customerName: reservation.customerName,
-      date: reservation.date,
-      time: reservation.time,
-      people: reservation.people.toString(),
+      nombreCliente: reservation.nombreCliente,
+      fecha: reservation.fecha,
+      hora: reservation.hora,
+      cantidadPersonas: reservation.cantidadPersonas.toString(),
       sector: reservation.sector,
-      phone: reservation.phone,
+      telefono: reservation.telefono,
     });
     setIsEditMode(true);
     setIsModalOpen(true);
   };
 
-  const handleDelete = (reservation: Reservation) => {
+  const handleDelete = async (reservation: Reservation) => {
     if (window.confirm('¿Está seguro que desea eliminar esta reserva?')) {
-      setReservations(prev => prev.filter(r => r.id !== reservation.id));
+      try {
+        await removeReservation(reservation.id);
+        const updatedReservations = await fetchReservations();
+        setReservations(updatedReservations);
+      } catch (error) {
+        console.error('Error deleting reservation:', error);
+      }
     }
   };
 
@@ -109,12 +100,12 @@ export function ReservationsPage() {
     setIsEditMode(false);
     setSelectedReservation(null);
     setNewReservation({
-      customerName: '',
-      date: format(new Date(), 'yyyy-MM-dd'),
-      time: '',
-      people: '',
+      nombreCliente: '',
+      fecha: format(new Date(), 'yyyy-MM-dd'),
+      hora: '',
+      cantidadPersonas: '',
       sector: 'A',
-      phone: '',
+      telefono: '',
     });
   };
 
@@ -146,9 +137,9 @@ export function ReservationsPage() {
               <input
                 type="text"
                 className="w-full px-3 py-2 border rounded-md"
-                value={newReservation.customerName}
+                value={newReservation.nombreCliente}
                 onChange={e =>
-                  setNewReservation(prev => ({ ...prev, customerName: e.target.value }))
+                  setNewReservation(prev => ({ ...prev, nombreCliente: e.target.value }))
                 }
                 required
               />
@@ -161,9 +152,9 @@ export function ReservationsPage() {
                 <input
                   type="date"
                   className="w-full px-3 py-2 border rounded-md"
-                  value={newReservation.date}
+                  value={newReservation.fecha}
                   onChange={e =>
-                    setNewReservation(prev => ({ ...prev, date: e.target.value }))
+                    setNewReservation(prev => ({ ...prev, fecha: e.target.value }))
                   }
                   required
                 />
@@ -175,9 +166,9 @@ export function ReservationsPage() {
                 <input
                   type="time"
                   className="w-full px-3 py-2 border rounded-md"
-                  value={newReservation.time}
+                  value={newReservation.hora}
                   onChange={e =>
-                    setNewReservation(prev => ({ ...prev, time: e.target.value }))
+                    setNewReservation(prev => ({ ...prev, hora: e.target.value }))
                   }
                   required
                 />
@@ -191,9 +182,9 @@ export function ReservationsPage() {
                 <input
                   type="number"
                   className="w-full px-3 py-2 border rounded-md"
-                  value={newReservation.people}
+                  value={newReservation.cantidadPersonas}
                   onChange={e =>
-                    setNewReservation(prev => ({ ...prev, people: e.target.value }))
+                    setNewReservation(prev => ({ ...prev, cantidadPersonas: e.target.value }))
                   }
                   required
                 />
@@ -206,7 +197,7 @@ export function ReservationsPage() {
                   className="w-full px-3 py-2 border rounded-md"
                   value={newReservation.sector}
                   onChange={e =>
-                    setNewReservation(prev => ({ ...prev, sector: e.target.value }))
+                    setNewReservation(prev => ({ ...prev, sector: e.target.value as 'A' | 'B' | 'C' }))
                   }
                   required
                 >
@@ -223,9 +214,9 @@ export function ReservationsPage() {
               <input
                 type="tel"
                 className="w-full px-3 py-2 border rounded-md"
-                value={newReservation.phone}
+                value={newReservation.telefono}
                 onChange={e =>
-                  setNewReservation(prev => ({ ...prev, phone: e.target.value }))
+                  setNewReservation(prev => ({ ...prev, telefono: e.target.value }))
                 }
                 required
               />
@@ -274,25 +265,25 @@ export function ReservationsPage() {
               <tr key={reservation.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
-                    {reservation.customerName}
+                    {reservation.nombreCliente}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
-                    {format(new Date(reservation.date), 'dd/MM/yyyy', { locale: es })}
+                    {format(new Date(reservation.fecha), 'dd/MM/yyyy', { locale: es })}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{reservation.time}</div>
+                  <div className="text-sm text-gray-900">{reservation.hora}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{reservation.people}</div>
+                  <div className="text-sm text-gray-900">{reservation.cantidadPersonas}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">Sector {reservation.sector}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{reservation.phone}</div>
+                  <div className="text-sm text-gray-900">{reservation.telefono}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button

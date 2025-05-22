@@ -33,6 +33,16 @@ export interface Table {
   capacidad: number;
 }
 
+export interface Reservation {
+  id: number;
+  nombreCliente: string;
+  fecha: string;
+  hora: string;
+  cantidadPersonas: number;
+  sector: 'A' | 'B' | 'C';
+  telefono: string;
+}
+
 export interface OrderDetail {
   id: number;
   pedidoId: number;
@@ -103,6 +113,12 @@ export interface ApiEndpoints {
   tables: {
     getAll: () => Promise<Table[]>;
     update: (id: number, table: Partial<Table>) => Promise<Table>;
+  };
+  reservations: {
+    getAll: () => Promise<Reservation[]>;
+    create: (reservation: Omit<Reservation, 'id'>) => Promise<Reservation>;
+    update: (id: number, reservation: Partial<Reservation>) => Promise<Reservation>;
+    delete: (id: number) => Promise<void>;
   };
   users: {
     getAll: () => Promise<User[]>;

@@ -194,6 +194,48 @@ export const api: ApiEndpoints = {
       return response.json();
     },
   },
+  reservations: {
+    getAll: async () => {
+      const response = await fetch(`${API_URL}/reservas`, {
+        headers: headers(),
+      });
+      if (!response.ok) {
+        throw new Error('Error fetching reservations');
+      }
+      return response.json();
+    },
+    create: async (reservation) => {
+      const response = await fetch(`${API_URL}/reservas`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify(reservation),
+      });
+      if (!response.ok) {
+        throw new Error('Error creating reservation');
+      }
+      return response.json();
+    },
+    update: async (id, reservation) => {
+      const response = await fetch(`${API_URL}/reservas/${id}`, {
+        method: 'PUT',
+        headers: headers(),
+        body: JSON.stringify(reservation),
+      });
+      if (!response.ok) {
+        throw new Error('Error updating reservation');
+      }
+      return response.json();
+    },
+    delete: async (id) => {
+      const response = await fetch(`${API_URL}/reservas/${id}`, {
+        method: 'DELETE',
+        headers: headers(),
+      });
+      if (!response.ok) {
+        throw new Error('Error deleting reservation');
+      }
+    },
+  },
   users: {
     getAll: async () => {
       const response = await fetch(`${API_URL}/usuarios`, {

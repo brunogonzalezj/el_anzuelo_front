@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { MenuItem, Order, Table, User, Role, Extra } from '../types';
+import type { MenuItem, Order, Table, User, Role, Extra, Reservation } from '../types';
 import { api } from '../lib/api';
 
 interface AuthState {
@@ -40,6 +40,14 @@ interface TableState {
   updateTableStatus: (id: number, estado: Table['estado']) => Promise<void>;
 }
 
+interface ReservationState {
+  reservations: Reservation[];
+  fetchReservations: () => Promise<Reservation[]>;
+  addReservation: (reservation: Omit<Reservation, 'id'>) => Promise<void>;
+  updateReservation: (id: number, reservation: Partial<Reservation>) => Promise<void>;
+  removeReservation: (id: number) => Promise<void>;
+}
+
 interface UserState {
   users: User[];
   fetchUsers: () => Promise<User[]>;
@@ -48,7 +56,7 @@ interface UserState {
   removeUser: (id: number) => Promise<void>;
 }
 
-interface Store extends AuthState, MenuState, ExtrasState, OrderState, TableState, UserState {
+interface Store extends AuthState, MenuState, ExtrasState, OrderState, TableState, ReservationState, UserState {
   hasAccess: (allowedRoles: Role[]) => boolean;
 }
 
@@ -156,6 +164,32 @@ export const useStore = create<Store>()(
           tables: state.tables.map((table) =>
             table.id === id ? updatedTable : table
           ),
+        }));
+      },
+
+      // Reservations State
+      reservations: [],
+      fetchReservations: async () => {
+        const reservations = await api.reservations.getAll();
+        set({ reservations });
+        return reservations;
+      },
+      addReservation: async (reservation) => {
+        const newReservation = await api.reservations.create(reservation);
+        set((state) => ({ reservations: [...state.reservations, newReservation] }));
+      },
+      updateReservation: async (id, reservation) => {
+        const updatedReservation = await api.reservations.update(id, reservation);
+        set((state) => ({
+          reservations: state.reservations.map((r) =>
+            r.id === id ? updatedReservation : r
+          ),
+        }));
+      },
+      removeReservation: async (id) => {
+        await api.reservations.delete(id);
+        set((state) => ({
+          reservations: state.reservations.filter((r) => r.id !== id),
         }));
       },
 
