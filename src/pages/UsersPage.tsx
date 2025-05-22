@@ -1,71 +1,87 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserPlus, Check, X, PencilIcon, Trash } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
-import type { User } from '../types';
+import { useStore } from '../store/useStore';
+import type { User, Role, Status } from '../types';
 
 export function UsersPage() {
-  const [users, setUsers] = useState(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  
+  const fetchUsers = useStore((state) => state.fetchUsers);
+  const addUser = useStore((state) => state.addUser);
+  const updateUser = useStore((state) => state.updateUser);
+  const removeUser = useStore((state) => state.removeUser);
+
   const [newUser, setNewUser] = useState({
-    name: '',
-    role: 'waiter',
-    active: true,
+    nombre: '',
+    apellido: '',
+    username: '',
+    rol: 'MESERO' as Role,
+    estado: 'ACTIVO' as Status,
   });
 
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const usersData = await fetchUsers();
+        setUsers(usersData);
+      } catch (error) {
+        console.error('Error loading users:', error);
+      }
+    };
+    loadUsers();
+  }, [fetchUsers]);
+
   const roles = {
-    manager: 'Encargado',
-    waiter: 'Mesero',
-    cashier: 'Cajero',
-    chef: 'Chef',
-    delivery: 'Repartidor',
+    ENCARGADO: 'Encargado',
+    MESERO: 'Mesero',
+    CAJERO: 'Cajero',
+    CHEF: 'Chef',
+    REPARTIDOR: 'Repartidor',
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isEditMode && selectedUser) {
-      setUsers(prev =>
-        prev.map(user =>
-          user.id === selectedUser.id
-            ? {
-                ...user,
-                name: newUser.name,
-                role: newUser.role,
-                active: newUser.active,
-              }
-            : user
-        )
-      );
-    } else {
-      setUsers(prev => [
-        ...prev,
-        {
-          id: Math.random().toString(36).substr(2, 9),
-          name: newUser.name,
-          role: newUser.role,
-          active: newUser.active,
-        },
-      ]);
+    try {
+      if (isEditMode && selectedUser) {
+        await updateUser(selectedUser.id, newUser);
+      } else {
+        await addUser(newUser);
+      }
+      const updatedUsers = await fetchUsers();
+      setUsers(updatedUsers);
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error saving user:', error);
     }
-    handleCloseModal();
   };
 
   const handleEdit = (user: User) => {
     setSelectedUser(user);
     setNewUser({
-      name: user.name,
-      role: user.role,
-      active: user.active,
+      nombre: user.nombre,
+      apellido: user.apellido,
+      username: user.username,
+      rol: user.rol,
+      estado: user.estado,
     });
     setIsEditMode(true);
     setIsModalOpen(true);
   };
 
-  const handleDelete = (user: User) => {
+  const handleDelete = async (user: User) => {
     if (window.confirm('¿Está seguro que desea eliminar este usuario?')) {
-      setUsers(prev => prev.filter(u => u.id !== user.id));
+      try {
+        await removeUser(user.id);
+        const updatedUsers = await fetchUsers();
+        setUsers(updatedUsers);
+      } catch (error) {
+        console.error('Error deleting user:', error);
+      }
     }
   };
 
@@ -74,9 +90,11 @@ export function UsersPage() {
     setIsEditMode(false);
     setSelectedUser(null);
     setNewUser({
-      name: '',
-      role: 'waiter',
-      active: true,
+      nombre: '',
+      apellido: '',
+      username: '',
+      rol: 'MESERO',
+      estado: 'ACTIVO',
     });
   };
 
@@ -108,8 +126,32 @@ export function UsersPage() {
               <input
                 type="text"
                 className="w-full px-3 py-2 border rounded-md"
-                value={newUser.name}
-                onChange={e => setNewUser(prev => ({ ...prev, name: e.target.value }))}
+                value={newUser.nombre}
+                onChange={e => setNewUser(prev => ({ ...prev, nombre: e.target.value }))}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Apellido
+              </label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border rounded-md"
+                value={newUser.apellido}
+                onChange={e => setNewUser(prev => ({ ...prev, apellido: e.target.value }))}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Usuario
+              </label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border rounded-md"
+                value={newUser.username}
+                onChange={e => setNewUser(prev => ({ ...prev, username: e.target.value }))}
                 required
               />
             </div>
@@ -119,8 +161,8 @@ export function UsersPage() {
               </label>
               <select
                 className="w-full px-3 py-2 border rounded-md"
-                value={newUser.role}
-                onChange={e => setNewUser(prev => ({ ...prev, role: e.target.value }))}
+                value={newUser.rol}
+                onChange={e => setNewUser(prev => ({ ...prev, rol: e.target.value as Role }))}
                 required
               >
                 {Object.entries(roles).map(([value, label]) => (
@@ -135,8 +177,11 @@ export function UsersPage() {
                 type="checkbox"
                 id="active"
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                checked={newUser.active}
-                onChange={e => setNewUser(prev => ({ ...prev, active: e.target.checked }))}
+                checked={newUser.estado === 'ACTIVO'}
+                onChange={e => setNewUser(prev => ({ 
+                  ...prev, 
+                  estado: e.target.checked ? 'ACTIVO' : 'INACTIVO' 
+                }))}
               />
               <label htmlFor="active" className="ml-2 block text-sm text-gray-900">
                 Usuario activo
@@ -162,6 +207,9 @@ export function UsersPage() {
                 Nombre
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Usuario
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Rol
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -176,20 +224,25 @@ export function UsersPage() {
             {users.map(user => (
               <tr key={user.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                  <div className="text-sm font-medium text-gray-900">
+                    {user.nombre} {user.apellido}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{user.username}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                    {roles[user.role as keyof typeof roles]}
+                    {roles[user.rol]}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`inline-flex items-center gap-1 ${
-                      user.active ? 'text-green-800' : 'text-red-800'
+                      user.estado === 'ACTIVO' ? 'text-green-800' : 'text-red-800'
                     }`}
                   >
-                    {user.active ? (
+                    {user.estado === 'ACTIVO' ? (
                       <>
                         <Check size={16} />
                         Activo
