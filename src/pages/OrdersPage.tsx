@@ -3,11 +3,13 @@ import { Clock, Check, ChefHat, Truck, Plus, Minus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
 import { useStore } from '../store/useStore';
-import type { Order, MenuItem } from '../types';
+import type { Order, MenuItem, Table } from '../types';
 
 export function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [tables, setTables] = useState<Table[]>([]);
   const fetchOrders = useStore((state) => state.fetchOrders);
+  const fetchTables = useStore((state) => state.fetchTables);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newOrder, setNewOrder] = useState({
     type: 'MESA' as const,
@@ -23,10 +25,21 @@ export function OrdersPage() {
   });
 
   useEffect(() => {
-    fetchOrders().then(fetchedOrders => {
-      setOrders(fetchedOrders || []);
-    });
-  }, [fetchOrders]);
+    const loadData = async () => {
+      try {
+        const [ordersData, tablesData] = await Promise.all([
+          fetchOrders(),
+          fetchTables()
+        ]);
+        setOrders(ordersData || []);
+        setTables(tablesData || []);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      }
+    };
+    
+    loadData();
+  }, [fetchOrders, fetchTables]);
 
   const statusMap = {
     PENDIENTE: { label: 'Pendiente', icon: Clock, color: 'text-yellow-600 bg-yellow-50' },
@@ -35,23 +48,23 @@ export function OrdersPage() {
     ENTREGADO: { label: 'Entregado', icon: Truck, color: 'text-gray-600 bg-gray-50' },
   };
 
-  const handleStatusChange = (orderId: string, newStatus: Order['status']) => {
+  const handleStatusChange = (orderId: string, newStatus: Order['estado']) => {
     setOrders(prevOrders =>
       prevOrders.map(order =>
         order.id === orderId
-          ? { ...order, status: newStatus }
+          ? { ...order, estado: newStatus }
           : order
       )
     );
   };
 
-  const getNextStatus = (currentStatus: Order['status']): Order['status'] | null => {
+  const getNextStatus = (currentStatus: Order['estado']): Order['estado'] | null => {
     const statusFlow = {
       PENDIENTE: 'PREPARANDO',
       PREPARANDO: 'LISTO',
       LISTO: 'ENTREGADO',
       ENTREGADO: null,
-    };
+    } as const;
     return statusFlow[currentStatus] || null;
   };
 
@@ -105,19 +118,28 @@ export function OrdersPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const total = newOrder.items.reduce(
-      (sum, item) => sum + item.menuItem.price * item.quantity,
+      (sum, item) => sum + item.menuItem.precio * item.quantity,
       0
     );
 
-    const newOrderData: Order = {
-      id: Math.random().toString(36).substr(2, 9),
-      ...newOrder,
-      status: 'PENDIENTE',
+    const newOrderData: Partial<Order> = {
+      tipoPedido: newOrder.type,
+      estado: 'PENDIENTE',
       total: total + (newOrder.type === 'DELIVERY' ? newOrder.deliveryInfo.deliveryFee : 0),
-      createdAt: new Date(),
+      mesaId: newOrder.type === 'MESA' ? parseInt(newOrder.tableNumber) : undefined,
+      nombreCliente: newOrder.type === 'DELIVERY' ? newOrder.deliveryInfo.customerName : undefined,
+      direccionCliente: newOrder.type === 'DELIVERY' ? newOrder.deliveryInfo.address : undefined,
+      telefonoCliente: newOrder.type === 'DELIVERY' ? newOrder.deliveryInfo.phone : undefined,
+      detalles: newOrder.items.map(item => ({
+        platoId: item.menuItem.id,
+        cantidad: item.quantity,
+        subtotal: item.menuItem.precio * item.quantity
+      }))
     };
 
-    setOrders(prev => [...prev, newOrderData]);
+    // Here you would typically call the API to create the order
+    console.log('New order:', newOrderData);
+
     setIsModalOpen(false);
     setNewOrder({
       type: 'MESA',
@@ -148,9 +170,9 @@ export function OrdersPage() {
 
       <div className="grid gap-6">
         {orders.map((order) => {
-          const status = statusMap[order.status];
+          const status = statusMap[order.estado];
           const StatusIcon = status.icon;
-          const nextStatus = getNextStatus(order.status);
+          const nextStatus = getNextStatus(order.estado);
 
           return (
             <div key={order.id} className="bg-white rounded-lg shadow-md p-6">
@@ -158,27 +180,22 @@ export function OrdersPage() {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-lg font-semibold">
-                      {order.type === 'DELIVERY' ? 'Delivery' : `Mesa ${order.tableNumber}`}
+                      {order.tipoPedido === 'DELIVERY' ? 'Delivery' : `Mesa ${order.mesaId}`}
                     </span>
                     <span className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${status.color}`}>
                       <StatusIcon size={16} />
                       {status.label}
                     </span>
                   </div>
-                  {order.type === 'DELIVERY' && order.deliveryInfo && (
+                  {order.tipoPedido === 'DELIVERY' && (
                     <div className="text-sm text-gray-600">
-                      <p>Cliente: {order.deliveryInfo.customerName}</p>
-                      <p>Dirección: {order.deliveryInfo.address}</p>
-                      <p>Teléfono: {order.deliveryInfo.phone}</p>
+                      <p>Cliente: {order.nombreCliente}</p>
+                      <p>Dirección: {order.direccionCliente}</p>
+                      <p>Teléfono: {order.telefonoCliente}</p>
                     </div>
                   )}
-                  {order.waiter && (
-                    <p className="text-sm text-gray-600">Mesero: {order.waiter}</p>
-                  )}
-                  {order.note && (
-                    <p className="text-sm text-gray-600 mt-2">
-                      <span className="font-medium">Nota:</span> {order.note}
-                    </p>
+                  {order.mesero && (
+                    <p className="text-sm text-gray-600">Mesero: {order.mesero.nombre}</p>
                   )}
                 </div>
                 <div className="flex flex-col items-end gap-2">
@@ -186,7 +203,7 @@ export function OrdersPage() {
                   {nextStatus && (
                     <button
                       className="text-sm px-3 py-1 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors"
-                      onClick={() => handleStatusChange(order.id, nextStatus)}
+                      onClick={() => handleStatusChange(order.id.toString(), nextStatus)}
                     >
                       Marcar como {statusMap[nextStatus].label}
                     </button>
@@ -197,15 +214,12 @@ export function OrdersPage() {
               <div className="border-t pt-4">
                 <h4 className="font-medium mb-2">Detalle del Pedido:</h4>
                 <div className="space-y-2">
-                  {order.items.map((item, index) => (
-                    <div key={index} className="flex justify-between text-sm">
+                  {order.detalles.map((detalle) => (
+                    <div key={detalle.id} className="flex justify-between text-sm">
                       <span>
-                        {item.quantity}x {item.menuItem.name}
-                        {item.cookingPreference && (
-                          <span className="text-gray-500"> ({item.cookingPreference})</span>
-                        )}
+                        {detalle.cantidad}x {detalle.plato.nombre}
                       </span>
-                      <span>Bs. {item.menuItem.price * item.quantity}</span>
+                      <span>Bs. {detalle.subtotal}</span>
                     </div>
                   ))}
                 </div>
@@ -260,11 +274,11 @@ export function OrdersPage() {
                   required
                 >
                   <option value="">Seleccionar mesa</option>
-                  {mockTables
-                    .filter(table => table.status === 'available')
+                  {tables
+                    .filter(table => table.estado === 'DISPONIBLE')
                     .map(table => (
-                      <option key={table.id} value={table.number}>
-                        Mesa {table.number} - Sector {table.sector}
+                      <option key={table.id} value={table.numero}>
+                        Mesa {table.numero} - Sector {table.sector}
                       </option>
                     ))}
                 </select>
@@ -328,19 +342,7 @@ export function OrdersPage() {
             <div>
               <h3 className="font-medium mb-2">Agregar Items</h3>
               <div className="grid grid-cols-2 gap-4 mb-4 max-h-48 overflow-y-auto">
-                {mockMenuItems.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className="flex items-center p-4 border rounded-lg hover:bg-gray-50"
-                    onClick={() => handleAddItem(item)}
-                  >
-                    <div>
-                      <div className="font-medium">{item.name}</div>
-                      <div className="text-sm text-gray-600">Bs. {item.price}</div>
-                    </div>
-                  </button>
-                ))}
+                {/* Here you would map through your menu items */}
               </div>
 
               {newOrder.items.length > 0 && (
@@ -353,16 +355,16 @@ export function OrdersPage() {
                         className="flex items-center justify-between"
                       >
                         <div>
-                          <span className="font-medium">{item.menuItem.name}</span>
+                          <span className="font-medium">{item.menuItem.nombre}</span>
                           <span className="text-gray-600 ml-2">
-                            Bs. {item.menuItem.price * item.quantity}
+                            Bs. {item.menuItem.precio * item.quantity}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
                             className="p-1 hover:bg-gray-100 rounded"
-                            onClick={() => handleQuantityChange(item.menuItem.id, -1)}
+                            onClick={() => handleQuantityChange(item.menuItem.id.toString(), -1)}
                           >
                             <Minus size={16} />
                           </button>
@@ -370,14 +372,14 @@ export function OrdersPage() {
                           <button
                             type="button"
                             className="p-1 hover:bg-gray-100 rounded"
-                            onClick={() => handleQuantityChange(item.menuItem.id, 1)}
+                            onClick={() => handleQuantityChange(item.menuItem.id.toString(), 1)}
                           >
                             <Plus size={16} />
                           </button>
                           <button
                             type="button"
                             className="ml-2 text-red-600 hover:bg-red-50 p-1 rounded"
-                            onClick={() => handleRemoveItem(item.menuItem.id)}
+                            onClick={() => handleRemoveItem(item.menuItem.id.toString())}
                           >
                             ×
                           </button>
@@ -390,7 +392,7 @@ export function OrdersPage() {
                     <span>
                       Bs.{' '}
                       {newOrder.items.reduce(
-                        (sum, item) => sum + item.menuItem.price * item.quantity,
+                        (sum, item) => sum + item.menuItem.precio * item.quantity,
                         0
                       )}
                     </span>

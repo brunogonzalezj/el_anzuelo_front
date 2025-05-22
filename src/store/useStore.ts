@@ -12,7 +12,7 @@ interface AuthState {
 
 interface MenuState {
     menu: MenuItem[];
-    fetchMenu: () => Promise<void>;
+    fetchMenu: () => Promise<MenuItem[]>;
     addMenuItem: (item: Omit<MenuItem, 'id'>) => Promise<void>;
     updateMenuItem: (id: number, item: Partial<MenuItem>) => Promise<void>;
     removeMenuItem: (id: number) => Promise<void>;
@@ -20,7 +20,7 @@ interface MenuState {
 
 interface ExtrasState {
     extras: Extra[];
-    fetchExtras: () => Promise<void>;
+    fetchExtras: () => Promise<Extra[]>;
     addExtra: (extra: {
         name: string;
         price: number;
@@ -34,7 +34,7 @@ interface ExtrasState {
 
 interface OrderState {
     orders: Order[];
-    fetchOrders: () => Promise<void>;
+    fetchOrders: () => Promise<Order[]>;
     addOrder: (order: Omit<Order, 'id' | 'fechaCreacion'>) => Promise<void>;
     updateOrder: (id: number, order: Partial<Order>) => Promise<void>;
     updateOrderStatus: (id: number, estado: Order['estado']) => Promise<void>;
@@ -42,13 +42,13 @@ interface OrderState {
 
 interface TableState {
     tables: Table[];
-    fetchTables: () => Promise<void>;
+    fetchTables: () => Promise<Table[]>;
     updateTableStatus: (id: number, estado: Table['estado']) => Promise<void>;
 }
 
 interface UserState {
     users: User[];
-    fetchUsers: () => Promise<void>;
+    fetchUsers: () => Promise<User[]>;
     addUser: (user: Omit<User, 'id'>) => Promise<void>;
     updateUser: (id: number, user: Partial<User>) => Promise<void>;
     removeUser: (id: number) => Promise<void>;
@@ -66,8 +66,6 @@ export const useStore = create<Store>()(
             token: null,
             login: async (username, password) => {
                 const response = await api.auth.login(username, password);
-
-
                 set({user: response.usuario, token: response.token});
             },
             logout: async () => {
@@ -80,6 +78,7 @@ export const useStore = create<Store>()(
             fetchMenu: async () => {
                 const menu = await api.menu.getAll();
                 set({menu});
+                return menu;
             },
             addMenuItem: async (item) => {
                 const newItem = await api.menu.create(item);
@@ -105,6 +104,7 @@ export const useStore = create<Store>()(
             fetchExtras: async () => {
                 const extras = await api.extras.getAll();
                 set({extras});
+                return extras;
             },
             addExtra: async (extra) => {
                 const newExtra = await api.extras.create(extra);
@@ -130,6 +130,7 @@ export const useStore = create<Store>()(
             fetchOrders: async () => {
                 const orders = await api.orders.getAll();
                 set({orders});
+                return orders;
             },
             addOrder: async (order) => {
                 const newOrder = await api.orders.create(order);
@@ -153,6 +154,7 @@ export const useStore = create<Store>()(
             fetchTables: async () => {
                 const tables = await api.tables.getAll();
                 set({tables});
+                return tables;
             },
             updateTableStatus: async (id, estado) => {
                 const updatedTable = await api.tables.update(id, {estado});
@@ -168,6 +170,7 @@ export const useStore = create<Store>()(
             fetchUsers: async () => {
                 const users = await api.users.getAll();
                 set({users});
+                return users;
             },
             addUser: async (user) => {
                 const newUser = await api.users.create(user);
