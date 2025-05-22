@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Receipt, CreditCard, Wallet } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useStore } from '../store/useStore';
 import type { Order } from '../types';
 
 export function BillingPage() {
@@ -14,9 +15,24 @@ export function BillingPage() {
     nit: '',
   });
 
-  const todaysOrders = mockOrders.filter(
+  const fetchOrders = useStore((state) => state.fetchOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        const ordersData = await fetchOrders();
+        setOrders(ordersData);
+      } catch (error) {
+        console.error('Error loading orders:', error);
+      }
+    };
+    loadOrders();
+  }, [fetchOrders]);
+
+  const todaysOrders = orders.filter(
     (order) =>
-      format(order.createdAt, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+      format(new Date(order.fechaCreacion), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
   );
 
   const handlePaymentMethodSelect = (method: 'cash' | 'qr') => {
@@ -48,11 +64,11 @@ export function BillingPage() {
     doc.text(`Método de pago: ${paymentMethod === 'cash' ? 'Efectivo' : 'QR'}`, 20, 55);
 
     // Tabla de items
-    const tableData = selectedOrder.items.map((item) => [
-      item.menuItem.name,
-      item.quantity.toString(),
-      `Bs. ${item.menuItem.price.toFixed(2)}`,
-      `Bs. ${(item.quantity * item.menuItem.price).toFixed(2)}`,
+    const tableData = selectedOrder.detalles.map((detalle) => [
+      detalle.plato.nombre,
+      detalle.cantidad.toString(),
+      `Bs. ${detalle.plato.precio.toFixed(2)}`,
+      `Bs. ${detalle.subtotal.toFixed(2)}`,
     ]);
 
     (doc as any).autoTable({
@@ -101,20 +117,20 @@ export function BillingPage() {
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <span className="font-medium">
-                      {order.type === 'delivery'
-                        ? `Delivery - ${order.deliveryInfo?.customerName}`
-                        : `Mesa ${order.tableNumber}`}
+                      {order.tipoPedido === 'DELIVERY'
+                        ? `Delivery - ${order.nombreCliente}`
+                        : `Mesa ${order.mesaId}`}
                     </span>
                     <p className="text-sm text-gray-600">
-                      {format(order.createdAt, 'HH:mm', { locale: es })}
+                      {format(new Date(order.fechaCreacion), 'HH:mm', { locale: es })}
                     </p>
                   </div>
                   <span className="font-bold">Bs. {order.total}</span>
                 </div>
                 <div className="text-sm text-gray-600">
-                  {order.items.map((item, index) => (
-                    <div key={index}>
-                      {item.quantity}x {item.menuItem.name}
+                  {order.detalles.map((detalle) => (
+                    <div key={detalle.id}>
+                      {detalle.cantidad}x {detalle.plato.nombre}
                     </div>
                   ))}
                 </div>
@@ -181,17 +197,17 @@ export function BillingPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {selectedOrder.items.map((item, index) => (
-                      <tr key={index}>
-                        <td className="px-4 py-2 text-sm">{item.menuItem.name}</td>
+                    {selectedOrder.detalles.map((detalle) => (
+                      <tr key={detalle.id}>
+                        <td className="px-4 py-2 text-sm">{detalle.plato.nombre}</td>
                         <td className="px-4 py-2 text-sm text-right">
-                          {item.quantity}
+                          {detalle.cantidad}
                         </td>
                         <td className="px-4 py-2 text-sm text-right">
-                          Bs. {item.menuItem.price}
+                          Bs. {detalle.plato.precio}
                         </td>
                         <td className="px-4 py-2 text-sm text-right">
-                          Bs. {item.quantity * item.menuItem.price}
+                          Bs. {detalle.subtotal}
                         </td>
                       </tr>
                     ))}
@@ -201,7 +217,7 @@ export function BillingPage() {
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Subtotal</span>
-                    <span>Bs. {selectedOrder.total}</span>
+                    <span>Bs. {selectedOrder.total.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>IVA (13%)</span>
