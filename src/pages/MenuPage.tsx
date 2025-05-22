@@ -3,15 +3,13 @@ import { Plus, Edit, Trash } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
 import { useStore } from '../store/useStore';
-import type {MenuItem, Extra, InventoryItem} from '../types';
+import type { MenuItem, Extra } from '../types';
 
 export function MenuPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isExtrasModalOpen, setIsExtrasModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const [inventoryExtras, setInventoryExtras] = useState<InventoryItem[]>([]);
-
 
   const menuItems = useStore((state) => state.menu);
   const extras = useStore((state) => state.extras);
@@ -22,8 +20,6 @@ export function MenuPage() {
   const removeMenuItem = useStore((state) => state.removeMenuItem);
   const addExtra = useStore((state) => state.addExtra);
   const removeExtra = useStore((state) => state.removeExtra);
-    const fetchInventory = useStore((state) => state.fetchInventory);
-
 
   const [newDish, setNewDish] = useState({
     nombre: '',
@@ -175,19 +171,6 @@ export function MenuPage() {
       descripcion: ''
     });
   };
-
-  useEffect(() => {
-    const fetchExtrasFromInventory = async () => {
-      try {
-        const allItems = await fetchInventory();
-        const filteredExtras = allItems.filter((item: InventoryItem) => item.categoria === "ACOMPAÑAMIENTOS");
-        setInventoryExtras(filteredExtras);
-      } catch (error) {
-        console.error("Error fetching extras from inventory:", error);
-      }
-    };
-    fetchExtrasFromInventory();
-  }, [fetchInventory]);
 
   return (
     <div>
@@ -408,29 +391,24 @@ export function MenuPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Nombre
               </label>
-              <select
-                  name="nombre"
-                  value={newExtra.nombre}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  required
-              >
-                <option value="">Seleccione un acompañamiento</option>
-                {inventoryExtras.map((item) => (
-                    <option key={item.id} value={item.nombre}>
-                      {item.nombre}
-                    </option>
-                ))}
-              </select>
+              <input
+                type="text"
+                name="nombre"
+                value={newExtra.nombre}
+                onChange={handleExtraInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                required
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Descripción
               </label>
               <textarea
-                  name="descripcion"
-                  value={newExtra.descripcion}
-                  onChange={handleExtraInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                name="descripcion"
+                value={newExtra.descripcion}
+                onChange={handleExtraInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 rows={2}
                 required
               />
