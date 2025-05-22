@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash,} from 'lucide-react';
+import { Plus, Edit, Trash } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
 import { useStore } from '../store/useStore';
@@ -10,6 +10,7 @@ export function MenuPage() {
   const [isExtrasModalOpen, setIsExtrasModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  
   const menuItems = useStore((state) => state.menu);
   const extras = useStore((state) => state.extras);
   const fetchMenu = useStore((state) => state.fetchMenu);
@@ -22,24 +23,27 @@ export function MenuPage() {
   const removeExtra = useStore((state) => state.removeExtra);
 
   const [newDish, setNewDish] = useState({
-    name: '',
-    category: 'Frito' as string,
-    price: '',
-    description: '',
-    selectedExtras: [] as string[]
+    nombre: '',
+    categoria: 'fritos',
+    precio: '',
+    descripcion: '',
+    extras: [] as string[]
   });
 
   const [newExtra, setNewExtra] = useState({
-    name: '',
-    price: '',
-    description: '',
-    category: 'sides' as const,
-    available: true
+    nombre: '',
+    descripcion: ''
   });
 
   useEffect(() => {
-    fetchMenu();
-    fetchExtras();
+    const loadData = async () => {
+      try {
+        await Promise.all([fetchMenu(), fetchExtras()]);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      }
+    };
+    loadData();
   }, [fetchMenu, fetchExtras]);
 
   const categories = {
@@ -48,14 +52,7 @@ export function MenuPage() {
     horno: 'Horno',
     bebidas: 'Bebidas',
     extras: 'Extras',
-    infante : 'Menú Anzuelito',
-  };
-
-  const extraCategories = {
-    sides: 'Acompañamientos',
-    sauces: 'Salsas',
-    drinks: 'Bebidas',
-    other: 'Otros'
+    infante: 'Menú Anzuelito',
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -63,19 +60,19 @@ export function MenuPage() {
     setNewDish(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleExtraInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleExtraInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setNewExtra(prev => ({ ...prev, [name]: value }));
   };
 
   const handleExtraToggle = (extraId: string) => {
     setNewDish(prev => {
-      const isSelected = prev.selectedExtras.includes(extraId);
+      const isSelected = prev.extras.includes(extraId);
       return {
         ...prev,
-        selectedExtras: isSelected
-          ? prev.selectedExtras.filter(id => id !== extraId)
-          : [...prev.selectedExtras, extraId]
+        extras: isSelected
+          ? prev.extras.filter(id => id !== extraId)
+          : [...prev.extras, extraId]
       };
     });
   };
@@ -83,11 +80,11 @@ export function MenuPage() {
   const handleEdit = (item: MenuItem) => {
     setSelectedItem(item);
     setNewDish({
-      name: item.nombre,
-      category: item.categoria,
-      price: item.precio.toString(),
-      description: item.descripcion,
-      selectedExtras: item.extras || []
+      nombre: item.nombre,
+      categoria: item.categoria,
+      precio: item.precio.toString(),
+      descripcion: item.descripcion,
+      extras: item.extras?.map(extra => extra.id.toString()) || []
     });
     setIsEditMode(true);
     setIsModalOpen(true);
@@ -95,48 +92,58 @@ export function MenuPage() {
 
   const handleDelete = async (item: MenuItem) => {
     if (window.confirm('¿Está seguro que desea eliminar este plato?')) {
-      await removeMenuItem(item.id);
+      try {
+        await removeMenuItem(item.id);
+      } catch (error) {
+        console.error('Error deleting menu item:', error);
+      }
     }
   };
 
   const handleDeleteExtra = async (extra: Extra) => {
     if (window.confirm('¿Está seguro que desea eliminar este acompañamiento?')) {
-      await removeExtra(extra.id);
+      try {
+        await removeExtra(extra.id);
+      } catch (error) {
+        console.error('Error deleting extra:', error);
+      }
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isEditMode && selectedItem) {
-      await updateMenuItem(selectedItem.id, {
-        name: newDish.name,
-        category: newDish.category,
-        price: Number(newDish.price),
-        description: newDish.description,
-        selectedExtras: newDish.selectedExtras
-      });
-    } else {
-      await addMenuItem({
-        nombre: newDish.name,
-        categoria: newDish.category,
-        precio: Number(newDish.price),
-        descripcion: newDish.description,
-        extras: newDish.selectedExtras
-      });
+    try {
+      if (isEditMode && selectedItem) {
+        await updateMenuItem(selectedItem.id, {
+          nombre: newDish.nombre,
+          categoria: newDish.categoria,
+          precio: Number(newDish.precio),
+          descripcion: newDish.descripcion,
+          extras: newDish.extras
+        });
+      } else {
+        await addMenuItem({
+          nombre: newDish.nombre,
+          categoria: newDish.categoria,
+          precio: Number(newDish.precio),
+          descripcion: newDish.descripcion,
+          extras: newDish.extras
+        });
+      }
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error saving menu item:', error);
     }
-    handleCloseModal();
   };
 
   const handleExtraSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addExtra({
-      name: newExtra.name,
-      price: Number(newExtra.price),
-      description: newExtra.description,
-      category: newExtra.category,
-      available: newExtra.available
-    });
-    handleCloseExtrasModal();
+    try {
+      await addExtra(newExtra);
+      handleCloseExtrasModal();
+    } catch (error) {
+      console.error('Error saving extra:', error);
+    }
   };
 
   const handleCloseModal = () => {
@@ -144,22 +151,19 @@ export function MenuPage() {
     setIsEditMode(false);
     setSelectedItem(null);
     setNewDish({
-      name: '',
-      category: 'Frito',
-      price: '',
-      description: '',
-      selectedExtras: []
+      nombre: '',
+      categoria: 'fritos',
+      precio: '',
+      descripcion: '',
+      extras: []
     });
   };
 
   const handleCloseExtrasModal = () => {
     setIsExtrasModalOpen(false);
     setNewExtra({
-      name: '',
-      price: '',
-      description: '',
-      category: 'sides',
-      available: true
+      nombre: '',
+      descripcion: ''
     });
   };
 
@@ -193,27 +197,24 @@ export function MenuPage() {
             <div key={item.id} className="bg-white rounded-lg shadow-md p-4">
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h3 className="text-lg font-semibold">{item.name}</h3>
-                  <span className="text-sm text-blue-600">{categories[item.category]}</span>
+                  <h3 className="text-lg font-semibold">{item.nombre}</h3>
+                  <span className="text-sm text-blue-600">{categories[item.categoria as keyof typeof categories]}</span>
                 </div>
-                <span className="text-lg font-bold">Bs. {item.price}</span>
+                <span className="text-lg font-bold">Bs. {item.precio}</span>
               </div>
-              <p className="text-gray-600 text-sm mb-3">{item.description}</p>
-              {item.selectedExtras && item.selectedExtras.length > 0 && (
+              <p className="text-gray-600 text-sm mb-3">{item.descripcion}</p>
+              {item.extras && item.extras.length > 0 && (
                 <div className="mb-3">
                   <span className="text-sm font-medium text-gray-700">Acompañamientos:</span>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {item.selectedExtras.map((extraId) => {
-                      const extra = extras.find(e => e.id === extraId);
-                      return extra ? (
-                        <span
-                          key={extraId}
-                          className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
-                        >
-                          {extra.name}
-                        </span>
-                      ) : null;
-                    })}
+                    {item.extras.map((extra) => (
+                      <span
+                        key={extra.id}
+                        className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
+                      >
+                        {extra.nombre}
+                      </span>
+                    ))}
                   </div>
                 </div>
               )}
@@ -247,9 +248,8 @@ export function MenuPage() {
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-medium">{extra.name}</h3>
-                  <p className="text-sm text-gray-600">{extra.description}</p>
-                  <p className="text-sm font-medium mt-1">Bs. {extra.price}</p>
+                  <h3 className="font-medium">{extra.nombre}</h3>
+                  <p className="text-sm text-gray-600">{extra.descripcion}</p>
                 </div>
                 <button
                   className="text-red-600 hover:bg-red-50 p-2 rounded"
@@ -279,8 +279,8 @@ export function MenuPage() {
                 </label>
                 <input
                   type="text"
-                  name="name"
-                  value={newDish.name}
+                  name="nombre"
+                  value={newDish.nombre}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   required
@@ -291,8 +291,8 @@ export function MenuPage() {
                   Categoría
                 </label>
                 <select
-                  name="category"
-                  value={newDish.category}
+                  name="categoria"
+                  value={newDish.categoria}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   required
@@ -310,8 +310,8 @@ export function MenuPage() {
                 </label>
                 <input
                   type="number"
-                  name="price"
-                  value={newDish.price}
+                  name="precio"
+                  value={newDish.precio}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   required
@@ -322,8 +322,8 @@ export function MenuPage() {
                   Descripción
                 </label>
                 <textarea
-                  name="description"
-                  value={newDish.description}
+                  name="descripcion"
+                  value={newDish.descripcion}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   rows={3}
@@ -339,18 +339,18 @@ export function MenuPage() {
                     <label
                       key={extra.id}
                       className={`flex items-center p-2 rounded border ${
-                        newDish.selectedExtras.includes(extra.id)
+                        newDish.extras.includes(extra.id.toString())
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-300'
                       }`}
                     >
                       <input
                         type="checkbox"
-                        checked={newDish.selectedExtras.includes(extra.id)}
-                        onChange={() => handleExtraToggle(extra.id)}
+                        checked={newDish.extras.includes(extra.id.toString())}
+                        onChange={() => handleExtraToggle(extra.id.toString())}
                         className="mr-2"
                       />
-                      <span>{extra.name}</span>
+                      <span>{extra.nombre}</span>
                     </label>
                   ))}
                 </div>
@@ -387,21 +387,8 @@ export function MenuPage() {
               </label>
               <input
                 type="text"
-                name="name"
-                value={newExtra.name}
-                onChange={handleExtraInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Precio (Bs.)
-              </label>
-              <input
-                type="number"
-                name="price"
-                value={newExtra.price}
+                name="nombre"
+                value={newExtra.nombre}
                 onChange={handleExtraInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 required
@@ -412,31 +399,13 @@ export function MenuPage() {
                 Descripción
               </label>
               <textarea
-                name="description"
-                value={newExtra.description}
+                name="descripcion"
+                value={newExtra.descripcion}
                 onChange={handleExtraInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 rows={2}
                 required
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Categoría
-              </label>
-              <select
-                name="category"
-                value={newExtra.category}
-                onChange={handleExtraInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                required
-              >
-                {Object.entries(extraCategories).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
             </div>
             <DialogFooter>
               <Button
