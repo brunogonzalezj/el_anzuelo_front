@@ -1,116 +1,104 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Package, AlertTriangle, Plus, PencilIcon, Trash } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
-
-interface InventoryItem {
-  id: string;
-  name: string;
-  category: string;
-  stock: number;
-  unit: string;
-  minStock: number;
-}
+import { useStore } from '../store/useStore';
+import type { InventoryItem } from '../types';
 
 export function InventoryPage() {
-  const [inventory, setInventory] = useState<InventoryItem[]>([
-    {
-      id: '1',
-      name: 'Pescado Sábalo',
-      category: 'Pescados',
-      stock: 25,
-      unit: 'kg',
-      minStock: 20,
-    },
-    {
-      id: '2',
-      name: 'Camarón',
-      category: 'Mariscos',
-      stock: 15,
-      unit: 'kg',
-      minStock: 18,
-    },
-    {
-      id: '3',
-      name: 'Arroz',
-      category: 'Acompañamientos',
-      stock: 50,
-      unit: 'kg',
-      minStock: 30,
-    },
-    {
-      id: '4',
-      name: 'Aceite',
-      category: 'Insumos',
-      stock: 10,
-      unit: 'l',
-      minStock: 15,
-    },
-  ]);
-
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  
+  const fetchInventory = useStore((state) => state.fetchInventory);
+  const addInventoryItem = useStore((state) => state.addInventoryItem);
+  const updateInventoryItem = useStore((state) => state.updateInventoryItem);
+  const removeInventoryItem = useStore((state) => state.removeInventoryItem);
+
   const [newItem, setNewItem] = useState({
-    name: '',
-    category: 'Pescados',
+    nombre: '',
+    categoria: 'PESCADOS' as const,
     stock: '',
-    unit: 'kg',
-    minStock: '',
+    unidad: 'kg' as const,
+    stockMinimo: '',
   });
 
-  const categories = ['Pescados', 'Mariscos', 'Acompañamientos', 'Insumos'];
-  const units = ['kg', 'l', 'unidad'];
+  useEffect(() => {
+    const loadInventory = async () => {
+      try {
+        const inventoryData = await fetchInventory();
+        setInventory(inventoryData);
+      } catch (error) {
+        console.error('Error loading inventory:', error);
+      }
+    };
+    loadInventory();
+  }, [fetchInventory]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const categories = {
+    PESCADOS: 'Pescados',
+    MARISCOS: 'Mariscos',
+    ACOMPAÑAMIENTOS: 'Acompañamientos',
+    INSUMOS: 'Insumos',
+  };
+
+  const units = {
+    kg: 'Kilogramos',
+    l: 'Litros',
+    unidad: 'Unidades',
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isEditMode && selectedItem) {
-      setInventory(prev =>
-        prev.map(item =>
-          item.id === selectedItem.id
-            ? {
-                ...item,
-                name: newItem.name,
-                category: newItem.category,
-                stock: parseInt(newItem.stock),
-                unit: newItem.unit,
-                minStock: parseInt(newItem.minStock),
-              }
-            : item
-        )
-      );
-    } else {
-      setInventory(prev => [
-        ...prev,
-        {
-          id: Math.random().toString(36).substr(2, 9),
-          name: newItem.name,
-          category: newItem.category,
-          stock: parseInt(newItem.stock),
-          unit: newItem.unit,
-          minStock: parseInt(newItem.minStock),
-        },
-      ]);
+    try {
+      if (isEditMode && selectedItem) {
+        await updateInventoryItem(selectedItem.id, {
+          nombre: newItem.nombre,
+          categoria: newItem.categoria,
+          stock: Number(newItem.stock),
+          unidad: newItem.unidad,
+          stockMinimo: Number(newItem.stockMinimo),
+        });
+      } else {
+        await addInventoryItem({
+          nombre: newItem.nombre,
+          categoria: newItem.categoria,
+          stock: Number(newItem.stock),
+          unidad: newItem.unidad,
+          stockMinimo: Number(newItem.stockMinimo),
+        });
+      }
+      const updatedInventory = await fetchInventory();
+      setInventory(updatedInventory);
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error saving inventory item:', error);
     }
-    handleCloseModal();
   };
 
   const handleEdit = (item: InventoryItem) => {
     setSelectedItem(item);
     setNewItem({
-      name: item.name,
-      category: item.category,
+      nombre: item.nombre,
+      categoria: item.categoria,
       stock: item.stock.toString(),
-      unit: item.unit,
-      minStock: item.minStock.toString(),
+      unidad: item.unidad,
+      stockMinimo: item.stockMinimo.toString(),
     });
     setIsEditMode(true);
     setIsModalOpen(true);
   };
 
-  const handleDelete = (item: InventoryItem) => {
+  const handleDelete = async (item: InventoryItem) => {
     if (window.confirm('¿Está seguro que desea eliminar este item?')) {
-      setInventory(prev => prev.filter(i => i.id !== item.id));
+      try {
+        await removeInventoryItem(item.id);
+        const updatedInventory = await fetchInventory();
+        setInventory(updatedInventory);
+      } catch (error) {
+        console.error('Error deleting inventory item:', error);
+      }
     }
   };
 
@@ -119,11 +107,11 @@ export function InventoryPage() {
     setIsEditMode(false);
     setSelectedItem(null);
     setNewItem({
-      name: '',
-      category: 'Pescados',
+      nombre: '',
+      categoria: 'PESCADOS',
       stock: '',
-      unit: 'kg',
-      minStock: '',
+      unidad: 'kg',
+      stockMinimo: '',
     });
   };
 
@@ -138,10 +126,6 @@ export function InventoryPage() {
           >
             <Plus size={20} />
             Crear Item
-          </button>
-          <button className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-            <Package size={20} />
-            Registrar Compra
           </button>
         </div>
       </div>
@@ -161,8 +145,8 @@ export function InventoryPage() {
               <input
                 type="text"
                 className="w-full px-3 py-2 border rounded-md"
-                value={newItem.name}
-                onChange={e => setNewItem(prev => ({ ...prev, name: e.target.value }))}
+                value={newItem.nombre}
+                onChange={e => setNewItem(prev => ({ ...prev, nombre: e.target.value }))}
                 required
               />
             </div>
@@ -172,13 +156,13 @@ export function InventoryPage() {
               </label>
               <select
                 className="w-full px-3 py-2 border rounded-md"
-                value={newItem.category}
-                onChange={e => setNewItem(prev => ({ ...prev, category: e.target.value }))}
+                value={newItem.categoria}
+                onChange={e => setNewItem(prev => ({ ...prev, categoria: e.target.value as InventoryItem['categoria'] }))}
                 required
               >
-                {categories.map(category => (
-                  <option key={category} value={category}>
-                    {category}
+                {Object.entries(categories).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
                   </option>
                 ))}
               </select>
@@ -202,13 +186,13 @@ export function InventoryPage() {
                 </label>
                 <select
                   className="w-full px-3 py-2 border rounded-md"
-                  value={newItem.unit}
-                  onChange={e => setNewItem(prev => ({ ...prev, unit: e.target.value }))}
+                  value={newItem.unidad}
+                  onChange={e => setNewItem(prev => ({ ...prev, unidad: e.target.value as InventoryItem['unidad'] }))}
                   required
                 >
-                  {units.map(unit => (
-                    <option key={unit} value={unit}>
-                      {unit}
+                  {Object.entries(units).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
                     </option>
                   ))}
                 </select>
@@ -221,8 +205,8 @@ export function InventoryPage() {
               <input
                 type="number"
                 className="w-full px-3 py-2 border rounded-md"
-                value={newItem.minStock}
-                onChange={e => setNewItem(prev => ({ ...prev, minStock: e.target.value }))}
+                value={newItem.stockMinimo}
+                onChange={e => setNewItem(prev => ({ ...prev, stockMinimo: e.target.value }))}
                 required
               />
             </div>
@@ -239,23 +223,23 @@ export function InventoryPage() {
       </Dialog>
 
       <div className="grid gap-6">
-        {categories.map(category => (
+        {Object.entries(categories).map(([category, label]) => (
           <div key={category} className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="bg-gray-50 px-6 py-4">
-              <h2 className="text-lg font-semibold text-gray-800">{category}</h2>
+              <h2 className="text-lg font-semibold text-gray-800">{label}</h2>
             </div>
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {inventory
-                  .filter(item => item.category === category)
+                  .filter(item => item.categoria === category)
                   .map(item => (
                     <div
                       key={item.id}
                       className="border rounded-lg p-4 hover:border-blue-500 transition-colors"
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-medium">{item.name}</h3>
-                        {item.stock < item.minStock && (
+                        <h3 className="font-medium">{item.nombre}</h3>
+                        {item.stock < item.stockMinimo && (
                           <AlertTriangle
                             size={20}
                             className="text-yellow-500"
@@ -268,19 +252,18 @@ export function InventoryPage() {
                           <span className="text-gray-600">Stock Actual:</span>
                           <span
                             className={
-                              item.stock < item.minStock
+                              item.stock < item.stockMinimo
                                 ? 'text-yellow-600 font-medium'
                                 : ''
                             }
                           >
-                            {item.stock} {item.unit}
+                            {item.stock} {units[item.unidad]}
                           </span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Stock Mínimo:</span>
                           <span>
-                
-                            {item.minStock} {item.unit}
+                            {item.stockMinimo} {units[item.unidad]}
                           </span>
                         </div>
                       </div>
