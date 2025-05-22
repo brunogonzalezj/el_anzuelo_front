@@ -19,12 +19,12 @@ function App() {
   const getInitialRoute = () => {
     if (!user) return '/login';
     
-    switch (user.role) {
-      case 'admin':
+    switch (user.rol) {
+      case 'ENCARGADO':
         return '/menu';
-      case 'cashier':
+      case 'CAJERO':
         return '/orders';
-      case 'chef':
+      case 'CHEF':
         return '/orders';
       default:
         return '/login';
@@ -39,7 +39,7 @@ function App() {
           <Route
             path="/"
             element={
-              <ProtectedRoute allowedRoles={['admin', 'cashier', 'chef']}>
+              <ProtectedRoute allowedRoles={['ENCARGADO', 'CAJERO', 'CHEF']}>
                 <Layout />
               </ProtectedRoute>
             }
@@ -48,7 +48,7 @@ function App() {
             <Route
               path="menu"
               element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['ENCARGADO']}>
                   <MenuPage />
                 </ProtectedRoute>
               }
@@ -56,7 +56,7 @@ function App() {
             <Route
               path="orders"
               element={
-                <ProtectedRoute allowedRoles={['admin', 'cashier', 'chef']}>
+                <ProtectedRoute allowedRoles={['ENCARGADO', 'CAJERO', 'CHEF']}>
                   <OrdersPage />
                 </ProtectedRoute>
               }
@@ -64,7 +64,7 @@ function App() {
             <Route
               path="tables"
               element={
-                <ProtectedRoute allowedRoles={['admin', 'cashier']}>
+                <ProtectedRoute allowedRoles={['ENCARGADO', 'CAJERO']}>
                   <TablesPage />
                 </ProtectedRoute>
               }
@@ -72,7 +72,7 @@ function App() {
             <Route
               path="reservations"
               element={
-                <ProtectedRoute allowedRoles={['admin', 'cashier']}>
+                <ProtectedRoute allowedRoles={['ENCARGADO', 'CAJERO']}>
                   <ReservationsPage />
                 </ProtectedRoute>
               }
@@ -80,7 +80,7 @@ function App() {
             <Route
               path="billing"
               element={
-                <ProtectedRoute allowedRoles={['admin', 'cashier']}>
+                <ProtectedRoute allowedRoles={['ENCARGADO', 'CAJERO']}>
                   <BillingPage />
                 </ProtectedRoute>
               }
@@ -88,7 +88,7 @@ function App() {
             <Route
               path="inventory"
               element={
-                <ProtectedRoute allowedRoles={['admin', 'chef']}>
+                <ProtectedRoute allowedRoles={['ENCARGADO', 'CHEF']}>
                   <InventoryPage />
                 </ProtectedRoute>
               }
@@ -96,7 +96,7 @@ function App() {
             <Route
               path="users"
               element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['ENCARGADO']}>
                   <UsersPage />
                 </ProtectedRoute>
               }

@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { Plus, PencilIcon, Trash } from 'lucide-react';
-import { mockTables } from '../data/mockData';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
 import type { Table } from '../types';
 
 export function TablesPage() {
-  const [tables, setTables] = useState(mockTables);
+  const [tables, setTables] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
@@ -14,16 +13,16 @@ export function TablesPage() {
     number: '',
     sector: 'A',
     seats: '',
-    status: 'available' as const,
+    status: 'DISPONIBLE' as const,
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'available':
+      case 'DISPONIBLE':
         return 'bg-green-100 text-green-800';
-      case 'occupied':
+      case 'OCUPADO':
         return 'bg-red-100 text-red-800';
-      case 'reserved':
+      case 'RESERVADO':
         return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -32,11 +31,11 @@ export function TablesPage() {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'available':
+      case 'DISPONIBLE':
         return 'Disponible';
-      case 'occupied':
+      case 'OCUPADO':
         return 'Ocupada';
-      case 'reserved':
+      case 'RESERVADO':
         return 'Reservada';
       default:
         return status;
@@ -77,10 +76,10 @@ export function TablesPage() {
   const handleEdit = (table: Table) => {
     setSelectedTable(table);
     setNewTable({
-      number: table.number.toString(),
+      number: table.numero.toString(),
       sector: table.sector,
-      seats: table.seats.toString(),
-      status: table.status,
+      seats: table.capacidad.toString(),
+      status: table.estado,
     });
     setIsEditMode(true);
     setIsModalOpen(true);

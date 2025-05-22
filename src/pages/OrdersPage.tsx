@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { Clock, Check, ChefHat, Truck, Plus, Minus } from 'lucide-react';
-import { mockOrders, mockMenuItems, mockTables } from '../data/mockData';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
 import type { Order, MenuItem } from '../types';
 
 export function OrdersPage() {
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newOrder, setNewOrder] = useState({
     type: 'dine-in' as const,

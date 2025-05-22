@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash, X } from 'lucide-react';
+import { Plus, Edit, Trash,} from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
 import { useStore } from '../store/useStore';
@@ -23,7 +23,7 @@ export function MenuPage() {
 
   const [newDish, setNewDish] = useState({
     name: '',
-    category: 'fried' as const,
+    category: 'Frito' as string,
     price: '',
     description: '',
     selectedExtras: [] as string[]
@@ -43,12 +43,12 @@ export function MenuPage() {
   }, [fetchMenu, fetchExtras]);
 
   const categories = {
-    fried: 'Fritos',
-    grill: 'Parrilla',
-    oven: 'Horno',
-    drinks: 'Bebidas',
+    fritos: 'Fritos',
+    parrilla: 'Parrilla',
+    horno: 'Horno',
+    bebidas: 'Bebidas',
     extras: 'Extras',
-    kids: 'Menú Anzuelito',
+    infante : 'Menú Anzuelito',
   };
 
   const extraCategories = {
@@ -83,11 +83,11 @@ export function MenuPage() {
   const handleEdit = (item: MenuItem) => {
     setSelectedItem(item);
     setNewDish({
-      name: item.name,
-      category: item.category,
-      price: item.price.toString(),
-      description: item.description,
-      selectedExtras: item.selectedExtras || []
+      name: item.nombre,
+      category: item.categoria,
+      price: item.precio.toString(),
+      description: item.descripcion,
+      selectedExtras: item.extras || []
     });
     setIsEditMode(true);
     setIsModalOpen(true);
@@ -117,11 +117,11 @@ export function MenuPage() {
       });
     } else {
       await addMenuItem({
-        name: newDish.name,
-        category: newDish.category,
-        price: Number(newDish.price),
-        description: newDish.description,
-        selectedExtras: newDish.selectedExtras
+        nombre: newDish.name,
+        categoria: newDish.category,
+        precio: Number(newDish.price),
+        descripcion: newDish.description,
+        extras: newDish.selectedExtras
       });
     }
     handleCloseModal();
@@ -145,7 +145,7 @@ export function MenuPage() {
     setSelectedItem(null);
     setNewDish({
       name: '',
-      category: 'fried',
+      category: 'Frito',
       price: '',
       description: '',
       selectedExtras: []

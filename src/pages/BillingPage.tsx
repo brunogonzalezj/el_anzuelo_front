@@ -4,7 +4,6 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { mockOrders } from '../data/mockData';
 import type { Order } from '../types';
 
 export function BillingPage() {

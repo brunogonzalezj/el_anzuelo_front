@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { UserPlus, Check, X, PencilIcon, Trash } from 'lucide-react';
-import { mockUsers } from '../data/mockData';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
 import type { User } from '../types';
