@@ -56,12 +56,6 @@ export interface OrderDetail {
   cantidad: number;
   subtotal: number;
   plato: MenuItem;
-  detallesExtra: {
-    id: number;
-    extraId: number;
-    cantidad: number;
-    extra: Extra;
-  }[];
 }
 
 export interface Order {

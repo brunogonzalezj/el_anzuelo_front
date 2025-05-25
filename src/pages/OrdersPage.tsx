@@ -41,7 +41,23 @@ export function OrdersPage() {
           fetchTables(),
           fetchMenu(),
         ]);
-        setOrders(ordersData);
+
+        // Filtrar los pedidos del día actual
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const filteredOrders = ordersData.filter(order => {
+          const orderDate = new Date(order.fechaCreacion);
+          orderDate.setHours(0, 0, 0, 0);
+          return orderDate.getTime() === today.getTime();
+        });
+
+        // Ordenar por fecha de creación (más reciente primero)
+        const sortedOrders = filteredOrders.sort((a, b) =>
+            new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime()
+        );
+
+        setOrders(sortedOrders);
         setTables(tablesData);
         setMenuItems(menuData);
       } catch (error) {
@@ -128,7 +144,6 @@ export function OrdersPage() {
         plato: menuItem, // Incluimos el plato completo
         cantidad: 1,
         subtotal: menuItem.precio,
-        detallesExtra: [], // Array vacío de extras inicialmente
       };
 
       return {
@@ -170,32 +185,43 @@ export function OrdersPage() {
     e.preventDefault();
     try {
       const total = newOrder.detalles.reduce(
-        (sum, item) => sum + item.subtotal,
-        0
+          (sum, item) => sum + item.subtotal,
+          0
       );
 
-      console.log({
-        ...newOrder,
-        total,
+      const orderData = {
+        tipoPedido: newOrder.tipoPedido,
         estado: 'PENDIENTE',
-        mesaId:
-          newOrder.tipoPedido === 'MESA'
-            ? parseInt(newOrder.mesaId)
-            : undefined,
-      })
+        total,
+        detalles: newOrder.detalles.map(detalle => ({
+          platoId: detalle.platoId,
+          cantidad: detalle.cantidad,
+          subtotal: detalle.subtotal
+        }))
+      } as  Order;
 
-      await addOrder({
-        ...newOrder,
-        total,
-        estado: 'PENDIENTE',
-        mesaId:
-          newOrder.tipoPedido === 'MESA'
-            ? parseInt(newOrder.mesaId)
-            : undefined,
-      });
+      // Agregar campos según el tipo de pedido
+      if (newOrder.tipoPedido === 'MESA') {
+        orderData.mesaId = parseInt(newOrder.mesaId);
+      } else {
+        // Para DELIVERY
+        orderData.nombreCliente = newOrder.nombreCliente;
+        orderData.direccionCliente = newOrder.direccionCliente;
+        orderData.telefonoCliente = newOrder.telefonoCliente;
+      }
+
+      console.log('Enviando datos de pedido:', orderData);
+      await addOrder(orderData);
 
       const updatedOrders = await fetchOrders();
       setOrders(updatedOrders);
+
+      // También actualizamos las mesas ya que el estado cambia
+      if (newOrder.tipoPedido === 'MESA') {
+        const updatedTables = await fetchTables();
+        setTables(updatedTables);
+      }
+
       handleCloseModal();
     } catch (error) {
       console.error('Error creating order:', error);
@@ -228,6 +254,11 @@ export function OrdersPage() {
         </button>
       </div>
 
+      {orders.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-md p-6 text-center">
+            <p className="text-gray-600">No hay pedidos para el día de hoy.</p>
+          </div>
+      ) : (
       <div className="grid gap-6">
         {orders.map((order) => {
           const status = statusMap[order.estado];
@@ -242,7 +273,7 @@ export function OrdersPage() {
                     <span className="text-lg font-semibold">
                       {order.tipoPedido === 'DELIVERY'
                         ? 'Delivery'
-                        : `Mesa ${order.mesaId}`}
+                        : `Mesa ${order.mesa?.numero}`}
                     </span>
                     <span
                       className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${status.color}`}
@@ -297,6 +328,7 @@ export function OrdersPage() {
           );
         })}
       </div>
+        )}
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -348,7 +380,7 @@ export function OrdersPage() {
                   {tables
                     .filter((table) => table.estado === 'DISPONIBLE')
                     .map((table) => (
-                      <option key={table.id} value={table.numero}>
+                      <option key={table.id} value={table.id}>
                         Mesa {table.numero} - Sector {table.sector}
                       </option>
                     ))}

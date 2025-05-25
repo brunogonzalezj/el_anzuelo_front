@@ -104,7 +104,12 @@ export function BillingPage() {
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-lg font-semibold mb-4">Pedidos del día</h2>
           <div className="space-y-4">
-            {todaysOrders.map((order) => (
+            {orders.length === 0 ? (
+                <div className="text-center py-4 text-gray-500">
+                  No hay pedidos para el día de hoy.
+                </div>
+            ) : (
+            todaysOrders.map((order) => (
               <div
                 key={order.id}
                 className={`border rounded-lg p-4 cursor-pointer transition-colors ${
@@ -135,7 +140,8 @@ export function BillingPage() {
                   ))}
                 </div>
               </div>
-            ))}
+            ))
+            )}
           </div>
         </div>
 
