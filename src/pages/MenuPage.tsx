@@ -136,6 +136,8 @@ export function MenuPage() {
         });
       }
       handleCloseModal();
+      fetchMenu()
+      fetchExtras()
     } catch (error) {
       console.error('Error saving menu item:', error);
     }
@@ -172,6 +174,8 @@ export function MenuPage() {
     });
   };
 
+  console.log('Menu Item IDs:', menuItems.map((item) => item.id));
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -200,6 +204,7 @@ export function MenuPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {menuItems.map((item) => (
             <div key={item.id} className="bg-white rounded-lg shadow-md p-4">
+
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <h3 className="text-lg font-semibold">{item.nombre}</h3>

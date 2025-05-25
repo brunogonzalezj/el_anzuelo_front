@@ -27,7 +27,6 @@ export function OrdersPage() {
     tipoPedido: 'MESA' as 'MESA' | 'DELIVERY',
     mesaId: '',
     detalles: [] as OrderDetail[],
-    nota: '',
     nombreCliente: '',
     direccionCliente: '',
     telefonoCliente: '',
@@ -209,7 +208,6 @@ export function OrdersPage() {
       tipoPedido: 'MESA',
       mesaId: '',
       detalles: [],
-      nota: '',
       nombreCliente: '',
       direccionCliente: '',
       telefonoCliente: '',
@@ -497,21 +495,6 @@ export function OrdersPage() {
                   </div>
                 </div>
               )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nota del pedido
-              </label>
-              <textarea
-                className="w-full px-3 py-2 border rounded-md"
-                value={newOrder.nota}
-                onChange={(e) =>
-                  setNewOrder((prev) => ({ ...prev, nota: e.target.value }))
-                }
-                placeholder="Especificaciones especiales del cliente..."
-                rows={3}
-              />
             </div>
 
             <DialogFooter>
