@@ -119,17 +119,15 @@ export function InventoryPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Control de Inventario</h1>
-        <div className="flex gap-2">
-          <button
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-            onClick={() => setIsModalOpen(true)}
-          >
-            <Plus size={20} />
-            Crear Item
-          </button>
-        </div>
+        <button
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 w-full sm:w-auto"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <Plus size={20} />
+          Crear Item
+        </button>
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
@@ -169,7 +167,7 @@ export function InventoryPage() {
                 ))}
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Stock Actual
@@ -227,11 +225,11 @@ export function InventoryPage() {
       <div className="grid gap-6">
         {Object.entries(categories).map(([category, label]) => (
           <div key={category} className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="bg-gray-50 px-6 py-4">
+            <div className="bg-gray-50 px-4 sm:px-6 py-4">
               <h2 className="text-lg font-semibold text-gray-800">{label}</h2>
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="p-4 sm:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {inventory
                   .filter(item => item.categoria === category)
                   .map(item => (

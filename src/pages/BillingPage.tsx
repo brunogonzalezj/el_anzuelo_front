@@ -49,21 +49,18 @@ export function BillingPage() {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Encabezado
     doc.setFontSize(20);
     doc.text('El Anzuelo', pageWidth / 2, 20, { align: 'center' });
     
     doc.setFontSize(12);
     doc.text('Factura', pageWidth / 2, 30, { align: 'center' });
     
-    // Información del cliente y factura
     doc.setFontSize(10);
     doc.text(`Fecha: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 20, 40);
     doc.text(`Cliente: ${customerInfo.name}`, 20, 45);
     doc.text(`NIT/CI: ${customerInfo.nit}`, 20, 50);
     doc.text(`Método de pago: ${paymentMethod === 'cash' ? 'Efectivo' : 'QR'}`, 20, 55);
 
-    // Tabla de items
     const tableData = selectedOrder.detalles.map((detalle) => [
       detalle.plato.nombre,
       detalle.cantidad.toString(),
@@ -73,80 +70,78 @@ export function BillingPage() {
 
     (doc as any).autoTable({
       startY: 65,
-      head: [['Item', 'Cantidad', 'Precio', 'Total']],
+      head: [['Item', 'Cantidad',
+ 'Precio', 'Total']],
       body: tableData,
       theme: 'grid',
       headStyles: { fillColor: [0, 102, 204] },
     });
 
-    // Totales
     const finalY = (doc as any).lastAutoTable.finalY + 10;
     doc.text(`Subtotal: Bs. ${selectedOrder.total.toFixed(2)}`, 140, finalY);
     doc.text(`IVA (13%): Bs. ${calculateTax(selectedOrder.total).toFixed(2)}`, 140, finalY + 5);
     doc.text(`Total: Bs. ${(selectedOrder.total + calculateTax(selectedOrder.total)).toFixed(2)}`, 140, finalY + 10);
 
-    // Pie de página
     doc.setFontSize(8);
     doc.text('Gracias por su preferencia', pageWidth / 2, finalY + 25, { align: 'center' });
 
-    // Guardar PDF
     doc.save(`factura-${format(new Date(), 'yyyyMMdd-HHmmss')}.pdf`);
   };
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Facturación</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Selección de pedido */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
           <h2 className="text-lg font-semibold mb-4">Pedidos del día</h2>
           <div className="space-y-4">
             {orders.length === 0 ? (
-                <div className="text-center py-4 text-gray-500">
-                  No hay pedidos para el día de hoy.
-                </div>
-            ) : (
-            todaysOrders.map((order) => (
-              <div
-                key={order.id}
-                className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                  selectedOrder?.id === order.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'hover:border-gray-400'
-                }`}
-                onClick={() => setSelectedOrder(order)}
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <span className="font-medium">
-                      {order.tipoPedido === 'DELIVERY'
-                        ? `Delivery - ${order.nombreCliente}`
-                        : `Mesa ${order.mesaId}`}
-                    </span>
-                    <p className="text-sm text-gray-600">
-                      {format(new Date(order.fechaCreacion), 'HH:mm', { locale: es })}
-                    </p>
-                  </div>
-                  <span className="font-bold">Bs. {order.total}</span>
-                </div>
-                <div className="text-sm text-gray-600">
-                  {order.detalles.map((detalle) => (
-                    <div key={detalle.id}>
-                      {detalle.cantidad}x {detalle.plato.nombre}
-                    </div>
-                  ))}
-                </div>
+              <div className="text-center py-4 text-gray-500">
+                No hay pedidos para el día de hoy.
               </div>
-            ))
+            ) : (
+              todaysOrders.map((order) => (
+                <div
+                  key={order.id}
+                  className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                    selectedOrder?.id === order.id
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'hover:border-gray-400'
+                  }`}
+                  onClick={() => setSelectedOrder(order)}
+                >
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-2 mb-2">
+                    <div>
+                      <span className="font-medium">
+                        {order.tipoPedido === 'DELIVERY'
+                          ? `Delivery - ${order.nombreCliente}`
+                          : `Mesa ${order.mesaId}`}
+                      </span>
+                      <p className="text-sm text-gray-600">
+                        {format(new Date(order.fechaCreacion), 'HH:mm', { locale: es })}
+                      </p>
+                    </div>
+                    <span className="font-bold">Bs. {order.total}</span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {order.detalles.map((detalle) => (
+                      <div key={detalle.id}>
+                        {detalle.cantidad}x {detalle.plato.nombre}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </div>
 
         {/* Formulario de facturación */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
           <div className="mb-6">
             <h2 className="text-lg font-semibold mb-4">Datos del Cliente</h2>
             <div className="grid grid-cols-1 gap-4">
@@ -185,40 +180,42 @@ export function BillingPage() {
             <>
               <div className="mb-6">
                 <h2 className="text-lg font-semibold mb-4">Detalle de Consumo</h2>
-                <table className="w-full mb-4">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
-                        Item
-                      </th>
-                      <th className="px-4 py-2 text-right text-sm font-medium text-gray-500">
-                        Cant.
-                      </th>
-                      <th className="px-4 py-2 text-right text-sm font-medium text-gray-500">
-                        Precio
-                      </th>
-                      <th className="px-4 py-2 text-right text-sm font-medium text-gray-500">
-                        Total
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {selectedOrder.detalles.map((detalle) => (
-                      <tr key={detalle.id}>
-                        <td className="px-4 py-2 text-sm">{detalle.plato.nombre}</td>
-                        <td className="px-4 py-2 text-sm text-right">
-                          {detalle.cantidad}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-right">
-                          Bs. {detalle.plato.precio}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-right">
-                          Bs. {detalle.subtotal}
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full mb-4">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
+                          Item
+                        </th>
+                        <th className="px-4 py-2 text-right text-sm font-medium text-gray-500">
+                          Cant.
+                        </th>
+                        <th className="px-4 py-2 text-right text-sm font-medium text-gray-500">
+                          Precio
+                        </th>
+                        <th className="px-4 py-2 text-right text-sm font-medium text-gray-500">
+                          Total
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {selectedOrder.detalles.map((detalle) => (
+                        <tr key={detalle.id}>
+                          <td className="px-4 py-2 text-sm">{detalle.plato.nombre}</td>
+                          <td className="px-4 py-2 text-sm text-right">
+                            {detalle.cantidad}
+                          </td>
+                          <td className="px-4 py-2 text-sm text-right">
+                            Bs. {detalle.plato.precio}
+                          </td>
+                          <td className="px-4 py-2 text-sm text-right">
+                            Bs. {detalle.subtotal}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between text-sm">
@@ -245,7 +242,7 @@ export function BillingPage() {
 
               <div>
                 <h2 className="text-lg font-semibold mb-4">Método de Pago</h2>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <button
                     className={`flex items-center justify-center gap-2 border rounded-lg px-4 py-2 transition-colors ${
                       paymentMethod === 'cash'
@@ -271,9 +268,9 @@ export function BillingPage() {
                 </div>
               </div>
 
-              <div className="mt-6 flex justify-end">
+              <div className="mt-6">
                 <button
-                  className={`bg-blue-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                  className={`w-full bg-blue-600 text-white px-6 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors ${
                     !paymentMethod || !customerInfo.name || !customerInfo.nit
                       ? 'opacity-50 cursor-not-allowed'
                       : 'hover:bg-blue-700'

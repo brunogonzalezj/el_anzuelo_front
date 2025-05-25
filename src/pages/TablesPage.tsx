@@ -68,21 +68,19 @@ export function TablesPage() {
     e.preventDefault();
     try {
       if (isEditMode && selectedTable) {
-        // Asumiendo que updateTableStatus espera (id, estado)
         await updateTableStatus(
-            selectedTable.id,
-            newTable.estado as 'DISPONIBLE' | 'OCUPADA' | 'RESERVADA'
+          selectedTable.id,
+          newTable.estado as 'DISPONIBLE' | 'OCUPADA' | 'RESERVADA'
         );
-
         const updatedTables = await fetchTables();
         setTables(updatedTables);
       } else {
         await createTable({
-            numero: parseInt(newTable.numero),
-            sector: newTable.sector as 'A' | 'B' | 'C',
-            capacidad: parseInt(newTable.capacidad),
-            estado: newTable.estado,
-        })
+          numero: parseInt(newTable.numero),
+          sector: newTable.sector as 'A' | 'B' | 'C',
+          capacidad: parseInt(newTable.capacidad),
+          estado: newTable.estado,
+        });
         const updatedTables = await fetchTables();
         setTables(updatedTables);
       }
@@ -98,7 +96,7 @@ export function TablesPage() {
       numero: table.numero.toString(),
       sector: table.sector,
       capacidad: table.capacidad.toString(),
-      estado: table.estado || 'DISPONIBLE', // Valor por defecto si es undefined
+      estado: table.estado || 'DISPONIBLE',
     });
     setIsEditMode(true);
     setIsModalOpen(true);
@@ -118,10 +116,10 @@ export function TablesPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Gestión de Mesas</h1>
         <button
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 w-full sm:w-auto"
           onClick={() => setIsModalOpen(true)}
         >
           <Plus size={20} />
@@ -181,15 +179,15 @@ export function TablesPage() {
                 Estado
               </label>
               <select
-                  className="w-full px-3 py-2 border rounded-md"
-                  value={newTable.estado}
-                  onChange={e =>
-                      setNewTable(prev => ({
-                        ...prev,
-                        estado: e.target.value as 'DISPONIBLE' | 'OCUPADA' | 'RESERVADA',
-                      }))
-                  }
-                  required
+                className="w-full px-3 py-2 border rounded-md"
+                value={newTable.estado}
+                onChange={e =>
+                  setNewTable(prev => ({
+                    ...prev,
+                    estado: e.target.value as 'DISPONIBLE' | 'OCUPADA' | 'RESERVADA',
+                  }))
+                }
+                required
               >
                 <option value="DISPONIBLE">Disponible</option>
                 <option value="OCUPADA">Ocupada</option>
@@ -210,7 +208,7 @@ export function TablesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {['A', 'B', 'C'].map(sector => (
-          <div key={sector} className="bg-white rounded-lg shadow-md p-6">
+          <div key={sector} className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <h2 className="text-xl font-semibold mb-4">Sector {sector}</h2>
             <div className="space-y-4">
               {tables
@@ -220,20 +218,22 @@ export function TablesPage() {
                     key={table.id}
                     className="border rounded-lg p-4 hover:border-blue-500 transition-colors"
                   >
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-medium">Mesa {table.numero}</span>
-                      <span
-                          className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                      <div>
+                        <span className="font-medium">Mesa {table.numero}</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
                               table.estado || 'DISPONIBLE'
-                          )}`}
-                      >
-  {getStatusLabel(table.estado || 'DISPONIBLE')}
-</span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Capacidad: {table.capacidad} personas
-                    </p>
-                    <div className="flex justify-end gap-2">
+                            )}`}
+                          >
+                            {getStatusLabel(table.estado || 'DISPONIBLE')}
+                          </span>
+                          <span className="text-sm text-gray-600">
+                            {table.capacidad} personas
+                          </span>
+                        </div>
+                      </div>
                       <button
                         className="text-blue-600 hover:bg-blue-50 p-2 rounded"
                         onClick={() => handleEdit(table)}

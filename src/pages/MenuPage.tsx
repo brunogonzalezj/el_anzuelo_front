@@ -38,8 +38,6 @@ export function MenuPage() {
     const loadData = async () => {
       try {
         await Promise.all([fetchMenu(), fetchExtras()]);
-        console.log('Data loaded successfully');
-        console.log('Menu Items:', menuItems);
       } catch (error) {
         console.error('Error loading data:', error);
       }
@@ -86,10 +84,7 @@ export function MenuPage() {
       precio: item.precio.toString(),
       descripcion: item.descripcion,
       extras: item.extras ?
-          item.extras.map(extra => {
-            // Manejar ambos formatos posibles de los extras
-            return extra.extra?.id || extra.id;
-          }) : []
+          item.extras.map(extra => extra.extra?.id || extra.id) : []
     });
     setIsEditMode(true);
     setIsModalOpen(true);
@@ -136,8 +131,8 @@ export function MenuPage() {
         });
       }
       handleCloseModal();
-      fetchMenu()
-      fetchExtras()
+      fetchMenu();
+      fetchExtras();
     } catch (error) {
       console.error('Error saving menu item:', error);
     }
@@ -174,22 +169,20 @@ export function MenuPage() {
     });
   };
 
-  console.log('Menu Item IDs:', menuItems.map((item) => item.id));
-
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Gestión de Menú</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button 
-            className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 w-full sm:w-auto"
             onClick={() => setIsExtrasModalOpen(true)}
           >
             <Plus size={20} />
             Nuevo Acompañamiento
           </button>
           <button 
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 w-full sm:w-auto"
             onClick={() => setIsModalOpen(true)}
           >
             <Plus size={20} />
@@ -201,10 +194,9 @@ export function MenuPage() {
       {/* Lista de Platos */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Platos</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {menuItems.map((item) => (
             <div key={item.id} className="bg-white rounded-lg shadow-md p-4">
-
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <h3 className="text-lg font-semibold">{item.nombre}</h3>
@@ -222,7 +214,6 @@ export function MenuPage() {
                         key={extra.extra?.id}
                         className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
                       >
-
                         {extra.extra?.nombre}
                       </span>
                     ))}
@@ -251,7 +242,7 @@ export function MenuPage() {
       {/* Lista de Acompañamientos */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Acompañamientos</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {extras.map((extra) => (
             <div
               key={extra.id}
@@ -345,7 +336,7 @@ export function MenuPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Acompañamientos
                 </label>
-                <div className="grid grid-cols-2 gap-2 mt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                   {extras.map((extra) => (
                     <label
                       key={extra.id}
@@ -356,10 +347,10 @@ export function MenuPage() {
                       }`}
                     >
                       <input
-                          type="checkbox"
-                          checked={newDish.extras.includes(extra.id)}
-                          onChange={() => handleExtraToggle(extra.id)}
-                          className="mr-2"
+                        type="checkbox"
+                        checked={newDish.extras.includes(extra.id)}
+                        onChange={() => handleExtraToggle(extra.id)}
+                        className="mr-2"
                       />
                       <span>{extra.nombre}</span>
                     </label>

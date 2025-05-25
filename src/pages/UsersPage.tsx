@@ -67,7 +67,7 @@ export function UsersPage() {
       nombre: user.nombre,
       apellido: user.apellido,
       username: user.username,
-        password: '', // Password should not be editable
+      password: '',
       rol: user.rol,
       estado: user.estado,
     });
@@ -95,7 +95,7 @@ export function UsersPage() {
       nombre: '',
       apellido: '',
       username: '',
-        password: '',
+      password: '',
       rol: 'MESERO',
       estado: 'ACTIVO',
     });
@@ -103,10 +103,10 @@ export function UsersPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Gestión de Usuarios</h1>
         <button
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 w-full sm:w-auto"
           onClick={() => setIsModalOpen(true)}
         >
           <UserPlus size={20} />
@@ -159,16 +159,16 @@ export function UsersPage() {
               />
             </div>
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Contraseña
-                </label>
-                <input
-                    type="password"
-                    className="w-full px-3 py-2 border rounded-md"
-                    value={newUser.password}
-                    onChange={e => setNewUser(prev => ({ ...prev, password: e.target.value }))}
-                    required
-                />
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Contraseña
+              </label>
+              <input
+                type="password"
+                className="w-full px-3 py-2 border rounded-md"
+                value={newUser.password}
+                onChange={e => setNewUser(prev => ({ ...prev, password: e.target.value }))}
+                required={!isEditMode}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -214,44 +214,45 @@ export function UsersPage() {
         </DialogContent>
       </Dialog>
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="bg-white rounded-lg shadow-md overflow-x-auto">
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Nombre
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Usuario
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Rol
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Estado
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Acciones
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {users.map(user => (
-              <tr key={user.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
+              <tr key={user.id} className="hover:bg-gray-50">
+                <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
                     {user.nombre} {user.apellido}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">{user.username}</div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                   <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                     {roles[user.rol]}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                
                   <span
                     className={`inline-flex items-center gap-1 ${
                       user.estado === 'ACTIVO' ? 'text-green-800' : 'text-red-800'
@@ -270,19 +271,21 @@ export function UsersPage() {
                     )}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-                    className="text-blue-600 hover:text-blue-900 mr-3"
-                    onClick={() => handleEdit(user)}
-                  >
-                    <PencilIcon size={18} />
-                  </button>
-                  <button
-                    className="text-red-600 hover:text-red-900"
-                    onClick={() => handleDelete(user)}
-                  >
-                    <Trash size={18} />
-                  </button>
+                <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div className="flex justify-end gap-2">
+                    <button
+                      className="text-blue-600 hover:text-blue-900"
+                      onClick={() => handleEdit(user)}
+                    >
+                      <PencilIcon size={18} />
+                    </button>
+                    <button
+                      className="text-red-600 hover:text-red-900"
+                      onClick={() => handleDelete(user)}
+                    >
+                      <Trash size={18} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

@@ -42,7 +42,6 @@ export function OrdersPage() {
           fetchMenu(),
         ]);
 
-        // Filtrar los pedidos del día actual
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
@@ -52,7 +51,6 @@ export function OrdersPage() {
           return orderDate.getTime() === today.getTime();
         });
 
-        // Ordenar por fecha de creación (más reciente primero)
         const sortedOrders = filteredOrders.sort((a, b) =>
             new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime()
         );
@@ -114,6 +112,7 @@ export function OrdersPage() {
   const handleOrderTypeChange = (type: 'MESA' | 'DELIVERY') => {
     setNewOrder((prev) => ({ ...prev, tipoPedido: type }));
   };
+
   const handleAddItem = (menuItem: MenuItem) => {
     if (!menuItem?.id || typeof menuItem?.precio !== 'number') return;
 
@@ -138,10 +137,10 @@ export function OrdersPage() {
       }
 
       const newDetail: OrderDetail = {
-        id: 0, // Este ID será asignado por el backend
-        pedidoId: 0, // Este ID será asignado por el backend
+        id: 0,
+        pedidoId: 0,
         platoId: menuItem.id,
-        plato: menuItem, // Incluimos el plato completo
+        plato: menuItem,
         cantidad: 1,
         subtotal: menuItem.precio,
       };
@@ -198,25 +197,21 @@ export function OrdersPage() {
           cantidad: detalle.cantidad,
           subtotal: detalle.subtotal
         }))
-      } as  Order;
+      } as Order;
 
-      // Agregar campos según el tipo de pedido
       if (newOrder.tipoPedido === 'MESA') {
         orderData.mesaId = parseInt(newOrder.mesaId);
       } else {
-        // Para DELIVERY
         orderData.nombreCliente = newOrder.nombreCliente;
         orderData.direccionCliente = newOrder.direccionCliente;
         orderData.telefonoCliente = newOrder.telefonoCliente;
       }
 
-      console.log('Enviando datos de pedido:', orderData);
       await addOrder(orderData);
 
       const updatedOrders = await fetchOrders();
       setOrders(updatedOrders);
 
-      // También actualizamos las mesas ya que el estado cambia
       if (newOrder.tipoPedido === 'MESA') {
         const updatedTables = await fetchTables();
         setTables(updatedTables);
@@ -243,10 +238,10 @@ export function OrdersPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Gestión de Pedidos</h1>
         <button
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 w-full sm:w-auto"
           onClick={() => setIsModalOpen(true)}
         >
           <Plus size={20} />
@@ -255,80 +250,80 @@ export function OrdersPage() {
       </div>
 
       {orders.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-6 text-center">
-            <p className="text-gray-600">No hay pedidos para el día de hoy.</p>
-          </div>
+        <div className="bg-white rounded-lg shadow-md p-6 text-center">
+          <p className="text-gray-600">No hay pedidos para el día de hoy.</p>
+        </div>
       ) : (
-      <div className="grid gap-6">
-        {orders.map((order) => {
-          const status = statusMap[order.estado];
-          const StatusIcon = status.icon;
-          const nextStatus = getNextStatus(order.estado);
+        <div className="grid gap-6">
+          {orders.map((order) => {
+            const status = statusMap[order.estado];
+            const StatusIcon = status.icon;
+            const nextStatus = getNextStatus(order.estado);
 
-          return (
-            <div key={order.id} className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg font-semibold">
-                      {order.tipoPedido === 'DELIVERY'
-                        ? 'Delivery'
-                        : `Mesa ${order.mesa?.numero}`}
-                    </span>
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${status.color}`}
-                    >
-                      <StatusIcon size={16} />
-                      {status.label}
-                    </span>
-                  </div>
-                  {order.tipoPedido === 'DELIVERY' && (
-                    <div className="text-sm text-gray-600">
-                      <p>Cliente: {order.nombreCliente}</p>
-                      <p>Dirección: {order.direccionCliente}</p>
-                      <p>Teléfono: {order.telefonoCliente}</p>
-                    </div>
-                  )}
-                  {order.mesero && (
-                    <p className="text-sm text-gray-600">
-                      Mesero: {order.mesero.nombre}
-                    </p>
-                  )}
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <span className="text-xl font-bold">Bs. {order.total}</span>
-                  {nextStatus && (
-                    <button
-                      className="text-sm px-3 py-1 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors"
-                      onClick={() => handleStatusChange(order.id, nextStatus)}
-                    >
-                      Marcar como {statusMap[nextStatus].label}
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-2">Detalle del Pedido:</h4>
-                <div className="space-y-2">
-                  {order.detalles.map((detalle) => (
-                    <div
-                      key={detalle.id}
-                      className="flex justify-between text-sm"
-                    >
-                      <span>
-                        {detalle.cantidad}x {detalle.plato.nombre}
+            return (
+              <div key={order.id} className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <span className="text-lg font-semibold">
+                        {order.tipoPedido === 'DELIVERY'
+                          ? 'Delivery'
+                          : `Mesa ${order.mesa?.numero}`}
                       </span>
-                      <span>Bs. {detalle.subtotal}</span>
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${status.color}`}
+                      >
+                        <StatusIcon size={16} />
+                        {status.label}
+                      </span>
                     </div>
-                  ))}
+                    {order.tipoPedido === 'DELIVERY' && (
+                      <div className="text-sm text-gray-600">
+                        <p>Cliente: {order.nombreCliente}</p>
+                        <p>Dirección: {order.direccionCliente}</p>
+                        <p>Teléfono: {order.telefonoCliente}</p>
+                      </div>
+                    )}
+                    {order.mesero && (
+                      <p className="text-sm text-gray-600">
+                        Mesero: {order.mesero.nombre}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
+                    <span className="text-xl font-bold">Bs. {order.total}</span>
+                    {nextStatus && (
+                      <button
+                        className="text-sm px-3 py-1 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors w-full sm:w-auto text-center"
+                        onClick={() => handleStatusChange(order.id, nextStatus)}
+                      >
+                        Marcar como {statusMap[nextStatus].label}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-2">Detalle del Pedido:</h4>
+                  <div className="space-y-2">
+                    {order.detalles.map((detalle) => (
+                      <div
+                        key={detalle.id}
+                        className="flex justify-between text-sm"
+                      >
+                        <span>
+                          {detalle.cantidad}x {detalle.plato.nombre}
+                        </span>
+                        <span>Bs. {detalle.subtotal}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-        )}
+            );
+          })}
+        </div>
+      )}
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -338,7 +333,7 @@ export function OrdersPage() {
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <button
                 type="button"
                 className={`flex-1 py-2 px-4 rounded-lg border ${
@@ -444,7 +439,7 @@ export function OrdersPage() {
 
             <div>
               <h3 className="font-medium mb-2">Agregar Items</h3>
-              <div className="grid grid-cols-2 gap-4 mb-4 max-h-48 overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 max-h-48 overflow-y-auto">
                 {menuItems.map((item) => (
                   <button
                     key={item.id}
