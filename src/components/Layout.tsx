@@ -8,10 +8,13 @@ import {
     Package,
     Users,
     LogOut,
+    Menu as MenuIcon,
+    X
 } from 'lucide-react';
 import {cn} from '../lib/utils';
 import {useStore} from '../store/useStore';
 import type {Role} from '../types';
+import { useState } from 'react';
 
 const navItems = [
     {icon: UtensilsCrossed, label: 'Menú', path: '/menu', roles: ['ENCARGADO']},
@@ -29,6 +32,7 @@ export function Layout() {
     const user = useStore((state) => state.user);
     const logout = useStore((state) => state.logout);
     const hasAccess = useStore((state) => state.hasAccess);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const handleLogout = async () => {
         await logout();
@@ -39,9 +43,26 @@ export function Layout() {
         hasAccess(item.roles as unknown as Role[])
     );
 
+    const toggleSidebar = () => {
+        setIsSidebarOpen(!isSidebarOpen);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 flex">
-            <aside className="w-64 bg-white shadow-lg fixed h-screen flex flex-col">
+            {/* Mobile menu button */}
+            <button
+                className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-lg"
+                onClick={toggleSidebar}
+            >
+                {isSidebarOpen ? <X size={24} /> : <MenuIcon size={24} />}
+            </button>
+
+            {/* Sidebar */}
+            <aside className={cn(
+                "w-64 bg-white shadow-lg fixed h-screen flex flex-col transition-transform duration-300 ease-in-out z-40",
+                "lg:translate-x-0",
+                isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+            )}>
                 <div className="h-16 flex items-center px-6 border-b">
                     <h1 className="text-xl font-bold text-blue-600">El Anzuelo</h1>
                 </div>
@@ -55,7 +76,7 @@ export function Layout() {
                             : user?.rol === 'CAJERO'
                                 ? 'Cajero'
                                 : user?.rol === 'CHEF'
-                        ? 'Cocinero' : 'Mesero'}
+                                    ? 'Cocinero' : 'Mesero'}
                     </p>
                 </div>
                 <nav className="p-4 space-y-2 flex-grow overflow-y-auto">
@@ -63,6 +84,7 @@ export function Layout() {
                         <Link
                             key={path}
                             to={path}
+                            onClick={() => setIsSidebarOpen(false)}
                             className={cn(
                                 'flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors',
                                 location.pathname === path
@@ -86,8 +108,19 @@ export function Layout() {
                 </div>
             </aside>
 
-            <main className="flex-1 p-8 ml-64 overflow-y-auto">
-                <Outlet/>
+            {/* Overlay for mobile */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
+            {/* Main content */}
+            <main className="flex-1 p-4 sm:p-6 lg:p-8 ml-0 lg:ml-64 w-full">
+                <div className="max-w-7xl mx-auto">
+                    <Outlet/>
+                </div>
             </main>
         </div>
     );
