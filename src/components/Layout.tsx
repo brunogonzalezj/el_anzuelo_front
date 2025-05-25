@@ -9,7 +9,8 @@ import {
     Users,
     LogOut,
     Menu as MenuIcon,
-    X
+    X,
+    BarChart3
 } from 'lucide-react';
 import {cn} from '../lib/utils';
 import {useStore} from '../store/useStore';
@@ -17,6 +18,7 @@ import type {Role} from '../types';
 import { useState } from 'react';
 
 const navItems = [
+    {icon: BarChart3, label: 'Dashboard', path: '/dashboard', roles: ['ENCARGADO']},
     {icon: UtensilsCrossed, label: 'Menú', path: '/menu', roles: ['ENCARGADO']},
     {icon: ClipboardList, label: 'Pedidos', path: '/orders', roles: ['ENCARGADO', 'CAJERO', 'CHEF']},
     {icon: LayoutGrid, label: 'Mesas', path: '/tables', roles: ['ENCARGADO', 'CAJERO']},

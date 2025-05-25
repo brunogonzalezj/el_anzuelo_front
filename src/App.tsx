@@ -9,6 +9,7 @@ import { ReservationsPage } from './pages/ReservationsPage';
 import { BillingPage } from './pages/BillingPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { UsersPage } from './pages/UsersPage';
+import { DashboardPage } from './pages/DashboardPage';
 import { ToastProvider } from './components/ui/Toast';
 import { useStore } from './store/useStore';
 
@@ -21,7 +22,7 @@ function App() {
     
     switch (user.rol) {
       case 'ENCARGADO':
-        return '/menu';
+        return '/dashboard';
       case 'CAJERO':
         return '/orders';
       case 'CHEF':
@@ -45,6 +46,14 @@ function App() {
             }
           >
             <Route index element={<Navigate to={getInitialRoute()} replace />} />
+            <Route
+              path="dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['ENCARGADO']}>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="menu"
               element={
