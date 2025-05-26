@@ -65,8 +65,8 @@ export function Layout() {
                 "lg:translate-x-0",
                 isSidebarOpen ? "translate-x-0" : "-translate-x-full"
             )}>
-                <div className="h-16 flex items-center px-6 border-b">
-                    <h1 className="text-xl font-bold text-blue-600">El Anzuelo</h1>
+                <div className="h-28 flex items-center justify-center  px-6 border-b">
+                    <img src="/elanzuelo_logo.webp" alt="Logo" className={"w-24 h-24"}/>
                 </div>
                 <div className="px-6 py-4 border-b">
                     <p className="text-sm font-medium text-gray-600">

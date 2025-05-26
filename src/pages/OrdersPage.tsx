@@ -82,6 +82,11 @@ export function OrdersPage() {
       icon: Truck,
       color: 'text-gray-600 bg-gray-50',
     },
+    FACTURADO: {
+      label: 'Facturado',
+      icon: Check,
+      color: 'text-gray-600 bg-gray-50',
+    },
   };
 
   const handleStatusChange = async (
@@ -105,6 +110,7 @@ export function OrdersPage() {
       PREPARANDO: 'LISTO',
       LISTO: 'ENTREGADO',
       ENTREGADO: null,
+        FACTURADO: null,
     } as const;
     return statusFlow[currentStatus] || null;
   };

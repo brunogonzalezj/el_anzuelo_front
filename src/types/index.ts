@@ -61,7 +61,7 @@ export interface OrderDetail {
 export interface Order {
   id: number;
   fechaCreacion: Date;
-  estado: 'PENDIENTE' | 'PREPARANDO' | 'LISTO' | 'ENTREGADO';
+  estado: 'PENDIENTE' | 'PREPARANDO' | 'LISTO' | 'ENTREGADO' | 'FACTURADO';
   tipoPedido: 'MESA' | 'DELIVERY';
   mesaId?: number;
   meseroId?: number;

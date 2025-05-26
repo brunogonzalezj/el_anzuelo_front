@@ -25,10 +25,8 @@ export function LoginForm() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8 p-6 sm:p-8 bg-white rounded-lg shadow-md">
-                <div>
-                    <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-900">
-                        El Anzuelo
-                    </h2>
+                <div className={"flex flex-col items-center"}>
+                    <img src={"/elanzuelo_logo.webp"} alt={"Logo"} className={"w-36 h-36"}/>
                     <p className="mt-2 text-center text-gray-600">
                         Inicia sesión para continuar
                     </p>
@@ -49,6 +47,7 @@ export function LoginForm() {
                         <input
                             id="username"
                             type="text"
+                            placeholder={"Ingrese su nombre de usuario"}
                             required
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
@@ -66,6 +65,7 @@ export function LoginForm() {
                         <input
                             id="password"
                             type="password"
+                            placeholder={"Ingrese su contraseña"}
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}

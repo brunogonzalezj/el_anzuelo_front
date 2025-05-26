@@ -16,6 +16,7 @@ export function BillingPage() {
   });
 
   const fetchOrders = useStore((state) => state.fetchOrders);
+  const updateOrderStatus = useStore((state) => state.updateOrderStatus);
   const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
@@ -31,8 +32,9 @@ export function BillingPage() {
   }, [fetchOrders]);
 
   const todaysOrders = orders.filter(
-    (order) =>
-      format(new Date(order.fechaCreacion), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+      (order) =>
+          format(new Date(order.fechaCreacion), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') &&
+          order.estado !== 'FACTURADO'
   );
 
   const handlePaymentMethodSelect = (method: 'cash' | 'qr') => {
@@ -43,7 +45,7 @@ export function BillingPage() {
     return subtotal * 0.13;
   };
 
-  const generatePDF = () => {
+  const generatePDF = async () => {
     if (!selectedOrder || !paymentMethod) return;
 
     const doc = new jsPDF();
@@ -86,6 +88,19 @@ export function BillingPage() {
     doc.text('Gracias por su preferencia', pageWidth / 2, finalY + 25, { align: 'center' });
 
     doc.save(`factura-${format(new Date(), 'yyyyMMdd-HHmmss')}.pdf`);
+
+    try {
+      await updateOrderStatus(selectedOrder.id, 'FACTURADO');
+      // Refresca la lista de pedidos
+      const updatedOrders = await fetchOrders();
+      setOrders(updatedOrders);
+      // Limpia la selección
+      setSelectedOrder(null);
+      setPaymentMethod(null);
+      setCustomerInfo({ name: '', nit: '' });
+    } catch (error) {
+      console.error('Error al actualizar el estado de la orden:', error);
+    }
   };
 
   return (
@@ -100,9 +115,13 @@ export function BillingPage() {
           <h2 className="text-lg font-semibold mb-4">Pedidos del día</h2>
           <div className="space-y-4">
             {orders.length === 0 ? (
-              <div className="text-center py-4 text-gray-500">
-                No hay pedidos para el día de hoy.
-              </div>
+                <div className="text-center py-4 text-gray-500">
+                  No hay pedidos para el día de hoy.
+                </div>
+            ) : todaysOrders.length === 0 ? (
+                <div className="text-center py-4 text-gray-500">
+                  Todas las órdenes del día ya han sido facturadas.
+                </div>
             ) : (
               todaysOrders.map((order) => (
                 <div
