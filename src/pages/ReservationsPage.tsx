@@ -165,6 +165,7 @@ export function ReservationsPage() {
                   type="date"
                   className="w-full px-3 py-2 border rounded-md"
                   value={newReservation.fecha}
+                  min={new Date().toISOString().split('T')[0]} // Prevent past dates
                   onChange={(e) =>
                     setNewReservation((prev) => ({
                       ...prev,

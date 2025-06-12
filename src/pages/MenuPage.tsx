@@ -11,6 +11,7 @@ export function MenuPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
 
+
   const menuItems = useStore((state) => state.menu);
   const extras = useStore((state) => state.extras);
   const fetchMenu = useStore((state) => state.fetchMenu);
@@ -20,24 +21,30 @@ export function MenuPage() {
   const removeMenuItem = useStore((state) => state.removeMenuItem);
   const addExtra = useStore((state) => state.addExtra);
   const removeExtra = useStore((state) => state.removeExtra);
+  const fetchInventory = useStore((state) => state.fetchInventory);
+  const inventory = useStore((state) => state.inventory);
 
   const [newDish, setNewDish] = useState({
     nombre: '',
     categoria: 'fritos',
     precio: '',
     descripcion: '',
-    extras: [] as number[]
+    extras: [] as number[],
+    inventarioId: 0,
+    cantidadInventario: 0
   });
 
   const [newExtra, setNewExtra] = useState({
     nombre: '',
-    descripcion: ''
+    descripcion: '',
+    inventarioId: 0,
+    cantidadInventario: 0
   });
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        await Promise.all([fetchMenu(), fetchExtras()]);
+        await Promise.all([fetchMenu(), fetchExtras(), fetchInventory()]);
       } catch (error) {
         console.error('Error loading data:', error);
       }
@@ -84,7 +91,9 @@ export function MenuPage() {
       precio: item.precio.toString(),
       descripcion: item.descripcion,
       extras: item.extras ?
-          item.extras.map(extra => extra.extra?.id || extra.id) : []
+          item.extras.map(extra => extra.extra?.id || extra.id) : [],
+      inventarioId: item.inventarioId || 0,
+      cantidadInventario: item.cantidadInventario || 0,
     });
     setIsEditMode(true);
     setIsModalOpen(true);
@@ -157,7 +166,9 @@ export function MenuPage() {
       categoria: 'fritos',
       precio: '',
       descripcion: '',
-      extras: []
+      extras: [],
+        inventarioId: 0,
+        cantidadInventario: 0,
     });
   };
 
@@ -165,14 +176,16 @@ export function MenuPage() {
     setIsExtrasModalOpen(false);
     setNewExtra({
       nombre: '',
-      descripcion: ''
+      descripcion: '',
+        inventarioId: 0,
+        cantidadInventario: 0,
     });
   };
 
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Gestión de Menú</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Gestión de Platos y Acompañamientos</h1>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button 
             className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 w-full sm:w-auto"
@@ -193,7 +206,7 @@ export function MenuPage() {
 
       {/* Lista de Platos */}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Platos</h2>
+        <h2 className="text-xl font-semibold mb-4">Menu</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {menuItems.map((item) => (
             <div key={item.id} className="bg-white rounded-lg shadow-md p-4">
@@ -280,12 +293,12 @@ export function MenuPage() {
                   Nombre del plato
                 </label>
                 <input
-                  type="text"
-                  name="nombre"
-                  value={newDish.nombre}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  required
+                    type="text"
+                    name="nombre"
+                    value={newDish.nombre}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    required
                 />
               </div>
               <div>
@@ -293,16 +306,16 @@ export function MenuPage() {
                   Categoría
                 </label>
                 <select
-                  name="categoria"
-                  value={newDish.categoria}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  required
+                    name="categoria"
+                    value={newDish.categoria}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    required
                 >
                   {Object.entries(categories).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
                   ))}
                 </select>
               </div>
@@ -311,12 +324,13 @@ export function MenuPage() {
                   Precio (Bs.)
                 </label>
                 <input
-                  type="number"
-                  name="precio"
-                  value={newDish.precio}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  required
+                    type="number"
+                    name="precio"
+                    min={0}
+                    value={newDish.precio}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    required
                 />
               </div>
               <div className="md:col-span-2">
@@ -324,12 +338,45 @@ export function MenuPage() {
                   Descripción
                 </label>
                 <textarea
-                  name="descripcion"
-                  value={newDish.descripcion}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  rows={3}
-                  required
+                    name="descripcion"
+                    value={newDish.descripcion}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    rows={3}
+                    required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Item de Inventario Vinculado
+                </label>
+                <select
+                    name="inventarioId"
+                    value={newDish.inventarioId}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    required
+                >
+                  <option value="">Selecciona un item</option>
+                  {inventory.map(item => (
+                      <option key={item.id} value={item.id}>
+                        {item.nombre}
+                      </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Cantidad a reducir del stock
+                </label>
+                <input
+                    type="number"
+                    name="cantidadInventario"
+                    min={0}
+                    value={newDish.cantidadInventario}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    required
                 />
               </div>
               <div className="md:col-span-2">
@@ -338,31 +385,31 @@ export function MenuPage() {
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                   {extras.map((extra) => (
-                    <label
-                      key={extra.id}
-                      className={`flex items-center p-2 rounded border ${
-                        newDish.extras.includes(extra.id)
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-300'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={newDish.extras.includes(extra.id)}
-                        onChange={() => handleExtraToggle(extra.id)}
-                        className="mr-2"
-                      />
-                      <span>{extra.nombre}</span>
-                    </label>
+                      <label
+                          key={extra.id}
+                          className={`flex items-center p-2 rounded border ${
+                              newDish.extras.includes(extra.id)
+                                  ? 'border-blue-500 bg-blue-50'
+                                  : 'border-gray-300'
+                          }`}
+                      >
+                        <input
+                            type="checkbox"
+                            checked={newDish.extras.includes(extra.id)}
+                            onChange={() => handleExtraToggle(extra.id)}
+                            className="mr-2"
+                        />
+                        <span>{extra.nombre}</span>
+                      </label>
                   ))}
                 </div>
               </div>
             </div>
             <DialogFooter>
               <Button
-                type="button"
-                variant="secondary"
-                onClick={handleCloseModal}
+                  type="button"
+                  variant="secondary"
+                  onClick={handleCloseModal}
               >
                 Cancelar
               </Button>
@@ -388,12 +435,12 @@ export function MenuPage() {
                 Nombre
               </label>
               <input
-                type="text"
-                name="nombre"
-                value={newExtra.nombre}
-                onChange={handleExtraInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                required
+                  type="text"
+                  name="nombre"
+                  value={newExtra.nombre}
+                  onChange={handleExtraInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
               />
             </div>
             <div>
@@ -401,19 +448,52 @@ export function MenuPage() {
                 Descripción
               </label>
               <textarea
-                name="descripcion"
-                value={newExtra.descripcion}
-                onChange={handleExtraInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                rows={2}
-                required
+                  name="descripcion"
+                  value={newExtra.descripcion}
+                  onChange={handleExtraInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  rows={2}
+                  required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Item de Inventario Vinculado
+              </label>
+              <select
+                  name="inventarioId"
+                  value={newDish.inventarioId}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
+              >
+                <option value="">Selecciona un item</option>
+                {inventory.map(item => (
+                    <option key={item.id} value={item.id}>
+                      {item.nombre}
+                    </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Cantidad a reducir del stock
+              </label>
+              <input
+                  type="number"
+                  name="cantidadInventario"
+                  min={0}
+                  value={newDish.cantidadInventario}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
               />
             </div>
             <DialogFooter>
               <Button
-                type="button"
-                variant="secondary"
-                onClick={handleCloseExtrasModal}
+                  type="button"
+                  variant="secondary"
+                  onClick={handleCloseExtrasModal}
               >
                 Cancelar
               </Button>
@@ -427,3 +507,4 @@ export function MenuPage() {
     </div>
   );
 }
+

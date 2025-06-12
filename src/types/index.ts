@@ -18,6 +18,8 @@ export interface MenuItem {
   precio: number;
   categoria: string;
   extras?: Extra[];
+  inventarioId?: number;
+  cantidadInventario?: number;
 }
 
 export interface Extra {

@@ -75,48 +75,69 @@ export function DashboardPage() {
     </div>
   );
 
-  const RecentOrders = () => (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-lg font-semibold mb-4">Pedidos Recientes</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Hora</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Tipo</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Estado</th>
-              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Total</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {orders.slice(0, 5).map((order) => (
-              <tr key={order.id} className="hover:bg-gray-50">
-                <td className="px-4 py-2 text-sm">
-                  {format(new Date(order.fechaCreacion), 'HH:mm', { locale: es })}
-                </td>
-                <td className="px-4 py-2 text-sm">
-                  {order.tipoPedido === 'DELIVERY' ? 'Delivery' : `Mesa ${order.mesaId}`}
-                </td>
-                <td className="px-4 py-2 text-sm">
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    order.estado === 'PENDIENTE' ? 'bg-yellow-100 text-yellow-800' :
-                    order.estado === 'PREPARANDO' ? 'bg-blue-100 text-blue-800' :
-                    order.estado === 'LISTO' ? 'bg-green-100 text-green-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {order.estado}
-                  </span>
-                </td>
-                <td className="px-4 py-2 text-sm text-right">
-                  Bs. {order.total}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+  const RecentOrders = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Filtrar solo las órdenes de hoy
+    const todaysOrders = orders.filter(order => {
+      const orderDate = new Date(order.fechaCreacion);
+      orderDate.setHours(0, 0, 0, 0);
+      return orderDate.getTime() === today.getTime();
+    });
+
+    // Ordenar las órdenes por fecha de creación (de más reciente a más antigua)
+    const sortedOrders = [...todaysOrders].sort((a, b) =>
+        new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime()
+    );
+
+    return (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-lg font-semibold mb-4">Pedidos Recientes</h2>
+          {sortedOrders.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No hay pedidos para hoy</p>
+          ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Hora</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Tipo</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Estado</th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Total</th>
+                  </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                  {sortedOrders.slice(0, 5).map((order) => (
+                      <tr key={order.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 text-sm">
+                          {format(new Date(order.fechaCreacion), 'HH:mm', { locale: es })}
+                        </td>
+                        <td className="px-4 py-2 text-sm">
+                          {order.tipoPedido === 'DELIVERY' ? 'Delivery' : `Mesa ${order.mesaId}`}
+                        </td>
+                        <td className="px-4 py-2 text-sm">
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                        order.estado === 'PENDIENTE' ? 'bg-yellow-100 text-yellow-800' :
+                            order.estado === 'PREPARANDO' ? 'bg-blue-100 text-blue-800' :
+                                order.estado === 'LISTO' ? 'bg-green-100 text-green-800' :
+                                    'bg-gray-100 text-gray-800'
+                    }`}>
+                      {order.estado}
+                    </span>
+                        </td>
+                        <td className="px-4 py-2 text-sm text-right">
+                          Bs. {order.total}
+                        </td>
+                      </tr>
+                  ))}
+                  </tbody>
+                </table>
+              </div>
+          )}
+        </div>
+    );
+  };
 
   const OrdersByType = () => {
     const today = new Date();

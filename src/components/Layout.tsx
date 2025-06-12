@@ -19,8 +19,8 @@ import { useState } from 'react';
 
 const navItems = [
     {icon: BarChart3, label: 'Dashboard', path: '/dashboard', roles: ['ENCARGADO']},
-    {icon: UtensilsCrossed, label: 'Menú', path: '/menu', roles: ['ENCARGADO']},
-    {icon: ClipboardList, label: 'Pedidos', path: '/orders', roles: ['ENCARGADO', 'CAJERO', 'CHEF']},
+    {icon: UtensilsCrossed, label: 'Platos', path: '/menu', roles: ['ENCARGADO']},
+    {icon: ClipboardList, label: 'Pedidos', path: '/orders', roles: ['ENCARGADO', 'CAJERO', 'CHEF', 'MESERO']},
     {icon: LayoutGrid, label: 'Mesas', path: '/tables', roles: ['ENCARGADO', 'CAJERO']},
     {icon: Calendar, label: 'Reservas', path: '/reservations', roles: ['ENCARGADO', 'CAJERO']},
     {icon: Receipt, label: 'Facturación', path: '/billing', roles: ['ENCARGADO', 'CAJERO']},
@@ -65,8 +65,8 @@ export function Layout() {
                 "lg:translate-x-0",
                 isSidebarOpen ? "translate-x-0" : "-translate-x-full"
             )}>
-                <div className="h-28 flex items-center justify-center  px-6 border-b">
-                    <img src="/elanzuelo_logo.webp" alt="Logo" className={"w-24 h-24"}/>
+                <div className="h-20 flex items-center justify-center  px-6 border-b">
+                    <img src="/elanzuelo_logo.webp" alt="Logo" className={"w-16 h-16"}/>
                 </div>
                 <div className="px-6 py-4 border-b">
                     <p className="text-sm font-medium text-gray-600">
@@ -81,7 +81,7 @@ export function Layout() {
                                     ? 'Cocinero' : 'Mesero'}
                     </p>
                 </div>
-                <nav className="p-4 space-y-2 flex-grow overflow-y-auto">
+                <nav className="p-4 space-y-2 flex-grow overflow-y-hidden">
                     {filteredNavItems.map(({icon: Icon, label, path}) => (
                         <Link
                             key={path}

@@ -174,6 +174,7 @@ export function InventoryPage() {
                 </label>
                 <input
                   type="number"
+                  min={0}
                   className="w-full px-3 py-2 border rounded-md"
                   value={newItem.stockActual}
                   onChange={e => setNewItem(prev => ({ ...prev, stockActual: e.target.value }))}
@@ -204,6 +205,7 @@ export function InventoryPage() {
               </label>
               <input
                 type="number"
+                min={0}
                 className="w-full px-3 py-2 border rounded-md"
                 value={newItem.stockMinimo}
                 onChange={e => setNewItem(prev => ({ ...prev, stockMinimo: e.target.value }))}

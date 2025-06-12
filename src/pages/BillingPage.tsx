@@ -5,7 +5,7 @@ import { es } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useStore } from '../store/useStore';
-import type { Order } from '../types';
+import type {Order, Table} from '../types';
 
 export function BillingPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -16,14 +16,20 @@ export function BillingPage() {
   });
 
   const fetchOrders = useStore((state) => state.fetchOrders);
+    const fetchTables = useStore((state) => state.fetchTables);
   const updateOrderStatus = useStore((state) => state.updateOrderStatus);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [tables, setTables] = useState<Table[]>([]);
 
   useEffect(() => {
     const loadOrders = async () => {
       try {
-        const ordersData = await fetchOrders();
-        setOrders(ordersData);
+          const [ordersData, tablesData] = await Promise.all([
+                fetchOrders(),
+                fetchTables()
+            ]);
+          setOrders(ordersData);
+            setTables(tablesData);
       } catch (error) {
         console.error('Error loading orders:', error);
       }
@@ -103,6 +109,13 @@ export function BillingPage() {
     }
   };
 
+    const getTableNumber = (tableId: number | undefined)=> {
+        const table = tables.find((t) => t.id === tableId);
+        return table ? table.numero : tableId;
+    };
+
+
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
@@ -138,7 +151,7 @@ export function BillingPage() {
                       <span className="font-medium">
                         {order.tipoPedido === 'DELIVERY'
                           ? `Delivery - ${order.nombreCliente}`
-                          : `Mesa ${order.mesaId}`}
+                          : `Mesa ${getTableNumber(order.mesaId)}`}
                       </span>
                       <p className="text-sm text-gray-600">
                         {format(new Date(order.fechaCreacion), 'HH:mm', { locale: es })}

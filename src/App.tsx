@@ -27,7 +27,9 @@ function App() {
         return '/orders';
       case 'CHEF':
         return '/orders';
-      default:
+        case "MESERO":
+            return '/orders';
+        default:
         return '/login';
     }
   };
@@ -40,7 +42,7 @@ function App() {
           <Route
             path="/"
             element={
-              <ProtectedRoute allowedRoles={['ENCARGADO', 'CAJERO', 'CHEF']}>
+              <ProtectedRoute allowedRoles={['ENCARGADO', 'CAJERO', 'CHEF', 'MESERO']}>
                 <Layout />
               </ProtectedRoute>
             }
@@ -65,7 +67,7 @@ function App() {
             <Route
               path="orders"
               element={
-                <ProtectedRoute allowedRoles={['ENCARGADO', 'CAJERO', 'CHEF']}>
+                <ProtectedRoute allowedRoles={['ENCARGADO', 'CAJERO', 'CHEF', 'MESERO']}>
                   <OrdersPage />
                 </ProtectedRoute>
               }
@@ -73,7 +75,7 @@ function App() {
             <Route
               path="tables"
               element={
-                <ProtectedRoute allowedRoles={['ENCARGADO', 'CAJERO']}>
+                <ProtectedRoute allowedRoles={['ENCARGADO', 'CAJERO', 'MESERO']}>
                   <TablesPage />
                 </ProtectedRoute>
               }
