@@ -3,6 +3,7 @@ import { Layout } from './components/Layout';
 import { LoginForm } from './components/LoginForm';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { MenuPage } from './pages/MenuPage';
+import { ExtrasPage } from './pages/ExtrasPage';
 import { OrdersPage } from './pages/OrdersPage';
 import { TablesPage } from './pages/TablesPage';
 import { ReservationsPage } from './pages/ReservationsPage';
@@ -61,6 +62,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['ENCARGADO']}>
                   <MenuPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="extras"
+              element={
+                <ProtectedRoute allowedRoles={['ENCARGADO']}>
+                  <ExtrasPage />
                 </ProtectedRoute>
               }
             />

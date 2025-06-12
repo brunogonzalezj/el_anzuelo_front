@@ -3,14 +3,12 @@ import { Plus, Edit, Trash } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../components/ui/Dialog';
 import { Button } from '../components/ui/Button';
 import { useStore } from '../store/useStore';
-import type { MenuItem, Extra } from '../types';
+import type { MenuItem } from '../types';
 
 export function MenuPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isExtrasModalOpen, setIsExtrasModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-
 
   const menuItems = useStore((state) => state.menu);
   const extras = useStore((state) => state.extras);
@@ -19,8 +17,6 @@ export function MenuPage() {
   const addMenuItem = useStore((state) => state.addMenuItem);
   const updateMenuItem = useStore((state) => state.updateMenuItem);
   const removeMenuItem = useStore((state) => state.removeMenuItem);
-  const addExtra = useStore((state) => state.addExtra);
-  const removeExtra = useStore((state) => state.removeExtra);
   const fetchInventory = useStore((state) => state.fetchInventory);
   const inventory = useStore((state) => state.inventory);
 
@@ -34,13 +30,6 @@ export function MenuPage() {
     cantidadInventario: 0
   });
 
-  const [newExtra, setNewExtra] = useState({
-    nombre: '',
-    descripcion: '',
-    inventarioId: 0,
-    cantidadInventario: 0
-  });
-
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -50,7 +39,7 @@ export function MenuPage() {
       }
     };
     loadData();
-  }, [fetchMenu, fetchExtras]);
+  }, [fetchMenu, fetchExtras, fetchInventory]);
 
   const categories = {
     fritos: 'Fritos',
@@ -64,11 +53,6 @@ export function MenuPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setNewDish(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleExtraInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setNewExtra(prev => ({ ...prev, [name]: value }));
   };
 
   const handleExtraToggle = (extraId: number) => {
@@ -109,16 +93,6 @@ export function MenuPage() {
     }
   };
 
-  const handleDeleteExtra = async (extra: Extra) => {
-    if (window.confirm('¿Está seguro que desea eliminar este acompañamiento?')) {
-      try {
-        await removeExtra(extra.id);
-      } catch (error) {
-        console.error('Error deleting extra:', error);
-      }
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -147,16 +121,6 @@ export function MenuPage() {
     }
   };
 
-  const handleExtraSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await addExtra(newExtra);
-      handleCloseExtrasModal();
-    } catch (error) {
-      console.error('Error saving extra:', error);
-    }
-  };
-
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setIsEditMode(false);
@@ -167,115 +131,67 @@ export function MenuPage() {
       precio: '',
       descripcion: '',
       extras: [],
-        inventarioId: 0,
-        cantidadInventario: 0,
-    });
-  };
-
-  const handleCloseExtrasModal = () => {
-    setIsExtrasModalOpen(false);
-    setNewExtra({
-      nombre: '',
-      descripcion: '',
-        inventarioId: 0,
-        cantidadInventario: 0,
+      inventarioId: 0,
+      cantidadInventario: 0,
     });
   };
 
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Gestión de Platos y Acompañamientos</h1>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <button 
-            className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 w-full sm:w-auto"
-            onClick={() => setIsExtrasModalOpen(true)}
-          >
-            <Plus size={20} />
-            Nuevo Acompañamiento
-          </button>
-          <button 
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 w-full sm:w-auto"
-            onClick={() => setIsModalOpen(true)}
-          >
-            <Plus size={20} />
-            Nuevo Plato
-          </button>
-        </div>
+        <h1 className="text-2xl font-bold text-gray-800">Gestión de Platos</h1>
+        <button 
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 w-full sm:w-auto"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <Plus size={20} />
+          Nuevo Plato
+        </button>
       </div>
 
       {/* Lista de Platos */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Menu</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {menuItems.map((item) => (
-            <div key={item.id} className="bg-white rounded-lg shadow-md p-4">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3 className="text-lg font-semibold">{item.nombre}</h3>
-                  <span className="text-sm text-blue-600">{categories[item.categoria as keyof typeof categories]}</span>
-                </div>
-                <span className="text-lg font-bold">Bs. {item.precio}</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {menuItems.map((item) => (
+          <div key={item.id} className="bg-white rounded-lg shadow-md p-4">
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <h3 className="text-lg font-semibold">{item.nombre}</h3>
+                <span className="text-sm text-blue-600">{categories[item.categoria as keyof typeof categories]}</span>
               </div>
-              <p className="text-gray-600 text-sm mb-3">{item.descripcion}</p>
-              {item.extras && item.extras.length > 0 && (
-                <div className="mb-3">
-                  <span className="text-sm font-medium text-gray-700">Acompañamientos:</span>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {item.extras.map((extra) => (
-                      <span
-                        key={extra.extra?.id}
-                        className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
-                      >
-                        {extra.extra?.nombre}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div className="flex justify-end gap-2 mt-4">
-                <button 
-                  className="text-blue-600 hover:bg-blue-50 p-2 rounded"
-                  onClick={() => handleEdit(item)}
-                >
-                  <Edit size={18} />
-                </button>
-                <button 
-                  className="text-red-600 hover:bg-red-50 p-2 rounded"
-                  onClick={() => handleDelete(item)}
-                >
-                  <Trash size={18} />
-                </button>
-              </div>
+              <span className="text-lg font-bold">Bs. {item.precio}</span>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Lista de Acompañamientos */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Acompañamientos</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {extras.map((extra) => (
-            <div
-              key={extra.id}
-              className="bg-white rounded-lg shadow-md p-4"
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-medium">{extra.nombre}</h3>
-                  <p className="text-sm text-gray-600">{extra.descripcion}</p>
+            <p className="text-gray-600 text-sm mb-3">{item.descripcion}</p>
+            {item.extras && item.extras.length > 0 && (
+              <div className="mb-3">
+                <span className="text-sm font-medium text-gray-700">Acompañamientos:</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {item.extras.map((extra) => (
+                    <span
+                      key={extra.extra?.id}
+                      className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
+                    >
+                      {extra.extra?.nombre}
+                    </span>
+                  ))}
                 </div>
-                <button
-                  className="text-red-600 hover:bg-red-50 p-2 rounded"
-                  onClick={() => handleDeleteExtra(extra)}
-                >
-                  <Trash size={18} />
-                </button>
               </div>
+            )}
+            <div className="flex justify-end gap-2 mt-4">
+              <button 
+                className="text-blue-600 hover:bg-blue-50 p-2 rounded"
+                onClick={() => handleEdit(item)}
+              >
+                <Edit size={18} />
+              </button>
+              <button 
+                className="text-red-600 hover:bg-red-50 p-2 rounded"
+                onClick={() => handleDelete(item)}
+              >
+                <Trash size={18} />
+              </button>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
 
       {/* Modal para crear/editar platos */}
@@ -293,12 +209,12 @@ export function MenuPage() {
                   Nombre del plato
                 </label>
                 <input
-                    type="text"
-                    name="nombre"
-                    value={newDish.nombre}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
+                  type="text"
+                  name="nombre"
+                  value={newDish.nombre}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
                 />
               </div>
               <div>
@@ -306,16 +222,16 @@ export function MenuPage() {
                   Categoría
                 </label>
                 <select
-                    name="categoria"
-                    value={newDish.categoria}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
+                  name="categoria"
+                  value={newDish.categoria}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
                 >
                   {Object.entries(categories).map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -324,13 +240,13 @@ export function MenuPage() {
                   Precio (Bs.)
                 </label>
                 <input
-                    type="number"
-                    name="precio"
-                    min={0}
-                    value={newDish.precio}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
+                  type="number"
+                  name="precio"
+                  min={0}
+                  value={newDish.precio}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
                 />
               </div>
               <div className="md:col-span-2">
@@ -338,12 +254,12 @@ export function MenuPage() {
                   Descripción
                 </label>
                 <textarea
-                    name="descripcion"
-                    value={newDish.descripcion}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    rows={3}
-                    required
+                  name="descripcion"
+                  value={newDish.descripcion}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  rows={3}
+                  required
                 />
               </div>
               <div>
@@ -351,17 +267,17 @@ export function MenuPage() {
                   Item de Inventario Vinculado
                 </label>
                 <select
-                    name="inventarioId"
-                    value={newDish.inventarioId}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
+                  name="inventarioId"
+                  value={newDish.inventarioId}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
                 >
                   <option value="">Selecciona un item</option>
                   {inventory.map(item => (
-                      <option key={item.id} value={item.id}>
-                        {item.nombre}
-                      </option>
+                    <option key={item.id} value={item.id}>
+                      {item.nombre}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -370,13 +286,13 @@ export function MenuPage() {
                   Cantidad a reducir del stock
                 </label>
                 <input
-                    type="number"
-                    name="cantidadInventario"
-                    min={0}
-                    value={newDish.cantidadInventario}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
+                  type="number"
+                  name="cantidadInventario"
+                  min={0}
+                  value={newDish.cantidadInventario}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
                 />
               </div>
               <div className="md:col-span-2">
@@ -385,31 +301,31 @@ export function MenuPage() {
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                   {extras.map((extra) => (
-                      <label
-                          key={extra.id}
-                          className={`flex items-center p-2 rounded border ${
-                              newDish.extras.includes(extra.id)
-                                  ? 'border-blue-500 bg-blue-50'
-                                  : 'border-gray-300'
-                          }`}
-                      >
-                        <input
-                            type="checkbox"
-                            checked={newDish.extras.includes(extra.id)}
-                            onChange={() => handleExtraToggle(extra.id)}
-                            className="mr-2"
-                        />
-                        <span>{extra.nombre}</span>
-                      </label>
+                    <label
+                      key={extra.id}
+                      className={`flex items-center p-2 rounded border ${
+                        newDish.extras.includes(extra.id)
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-300'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={newDish.extras.includes(extra.id)}
+                        onChange={() => handleExtraToggle(extra.id)}
+                        className="mr-2"
+                      />
+                      <span>{extra.nombre}</span>
+                    </label>
                   ))}
                 </div>
               </div>
             </div>
             <DialogFooter>
               <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleCloseModal}
+                type="button"
+                variant="secondary"
+                onClick={handleCloseModal}
               >
                 Cancelar
               </Button>
@@ -420,91 +336,6 @@ export function MenuPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      {/* Modal para crear acompañamientos */}
-      <Dialog open={isExtrasModalOpen} onOpenChange={handleCloseExtrasModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
-              Crear Nuevo Acompañamiento
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleExtraSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre
-              </label>
-              <input
-                  type="text"
-                  name="nombre"
-                  value={newExtra.nombre}
-                  onChange={handleExtraInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Descripción
-              </label>
-              <textarea
-                  name="descripcion"
-                  value={newExtra.descripcion}
-                  onChange={handleExtraInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  rows={2}
-                  required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Item de Inventario Vinculado
-              </label>
-              <select
-                  name="inventarioId"
-                  value={newDish.inventarioId}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  required
-              >
-                <option value="">Selecciona un item</option>
-                {inventory.map(item => (
-                    <option key={item.id} value={item.id}>
-                      {item.nombre}
-                    </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Cantidad a reducir del stock
-              </label>
-              <input
-                  type="number"
-                  name="cantidadInventario"
-                  min={0}
-                  value={newDish.cantidadInventario}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  required
-              />
-            </div>
-            <DialogFooter>
-              <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleCloseExtrasModal}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit">
-                Crear Acompañamiento
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
-
