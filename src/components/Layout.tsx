@@ -23,7 +23,7 @@ const navItems = [
     {icon: UtensilsCrossed, label: 'Platos', path: '/menu', roles: ['ENCARGADO']},
     {icon: Plus, label: 'Acompañamientos', path: '/extras', roles: ['ENCARGADO']},
     {icon: ClipboardList, label: 'Pedidos', path: '/orders', roles: ['ENCARGADO', 'CAJERO', 'CHEF', 'MESERO']},
-    {icon: LayoutGrid, label: 'Mesas', path: '/tables', roles: ['ENCARGADO', 'CAJERO']},
+    {icon: LayoutGrid, label: 'Mesas', path: '/tables', roles: ['ENCARGADO', 'CAJERO', 'MESERO']},
     {icon: Calendar, label: 'Reservas', path: '/reservations', roles: ['ENCARGADO', 'CAJERO']},
     {icon: Receipt, label: 'Facturación', path: '/billing', roles: ['ENCARGADO', 'CAJERO']},
     {icon: Package, label: 'Inventario', path: '/inventory', roles: ['ENCARGADO', 'CHEF']},
@@ -67,10 +67,13 @@ export function Layout() {
                 "lg:translate-x-0",
                 isSidebarOpen ? "translate-x-0" : "-translate-x-full"
             )}>
-                <div className="h-20 flex items-center justify-center  px-6 border-b">
-                    <img src="/elanzuelo_logo.webp" alt="Logo" className={"w-16 h-16"}/>
+                {/* Logo */}
+                <div className="h-16 flex items-center justify-center px-6 border-b flex-shrink-0">
+                    <img src="/elanzuelo_logo.webp" alt="Logo" className="w-12 h-12"/>
                 </div>
-                <div className="px-6 py-4 border-b">
+                
+                {/* User info */}
+                <div className="px-6 py-3 border-b flex-shrink-0">
                     <p className="text-sm font-medium text-gray-600">
                         Bienvenido, {user?.nombre}
                     </p>
@@ -83,7 +86,9 @@ export function Layout() {
                                     ? 'Cocinero' : 'Mesero'}
                     </p>
                 </div>
-                <nav className="p-4 space-y-2 flex-grow overflow-y-hidden">
+                
+                {/* Navigation - with scroll */}
+                <nav className="flex-1 overflow-y-auto p-4 space-y-1">
                     {filteredNavItems.map(({icon: Icon, label, path}) => (
                         <Link
                             key={path}
@@ -101,7 +106,9 @@ export function Layout() {
                         </Link>
                     ))}
                 </nav>
-                <div className="p-4 border-t mt-auto">
+                
+                {/* Logout button */}
+                <div className="p-4 border-t flex-shrink-0">
                     <button
                         onClick={handleLogout}
                         className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
