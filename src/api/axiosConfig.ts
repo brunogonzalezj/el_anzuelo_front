@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useStore } from '../store/useStore';
 
 const api = axios.create({
-    baseURL: 'http://localhost:3000/api', // Cambia esto a tu URL base
+    baseURL: 'https://d538-189-28-70-112.ngrok-free.app/api', // Cambia esto a tu URL base
     headers: {
         'Content-Type': 'application/json'
     }
