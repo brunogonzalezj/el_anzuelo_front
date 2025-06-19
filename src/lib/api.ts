@@ -1,6 +1,6 @@
 import { ApiEndpoints } from '../types';
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'https://d538-189-28-70-112.ngrok-free.app/api';
 
 const headers = () => ({
   'Content-Type': 'application/json',
