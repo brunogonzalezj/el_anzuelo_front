@@ -7,6 +7,7 @@ const token = localStorage.getItem('token');
 const headers = () => ({
   'Content-Type': 'application/json',
   Authorization: `Bearer ${token}`,
+  'ngrok-skip-browser-warning': 'true'
 });
 
 export const api: ApiEndpoints = {
