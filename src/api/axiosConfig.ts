@@ -1,11 +1,12 @@
 // src/api/axiosConfig.ts
 import axios from 'axios';
 import { useStore } from '../store/useStore';
-
+const token = localStorage.getItem('token');
 const api = axios.create({
     baseURL: 'https://d538-189-28-70-112.ngrok-free.app/api', // Cambia esto a tu URL base
     headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // Agrega el token de autorización si está disponible
     }
 });
 

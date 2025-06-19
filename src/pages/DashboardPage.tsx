@@ -51,6 +51,7 @@ export function DashboardPage() {
 
       } catch (error) {
         console.error('Error loading orders:', error);
+
       }
     };
     loadOrders();

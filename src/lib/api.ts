@@ -134,9 +134,12 @@ export const api: ApiEndpoints = {
     getAll: async () => {
       const response = await fetch(`${API_URL}/pedidos`, {
         headers: headers(),
+        method: 'GET',
       });
       if (!response.ok) {
         throw new Error('Error fetching orders');
+        const text = await response.text()
+        throw new Error('Error fetching orders: ' + text);
       }
       return response.json();
     },
