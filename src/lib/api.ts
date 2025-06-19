@@ -136,10 +136,10 @@ export const api: ApiEndpoints = {
         headers: headers(),
         method: 'GET',
       });
+      const text = await response.text()
+      console.log('Error fetching orders: ' + text);
       if (!response.ok) {
         throw new Error('Error fetching orders');
-        const text = await response.text()
-        throw new Error('Error fetching orders: ' + text);
       }
       return response.json();
     },
