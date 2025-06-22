@@ -1,12 +1,10 @@
 import { ApiEndpoints } from '../types';
 
 const API_URL = 'https://d538-189-28-70-112.ngrok-free.app/api';
-const token = localStorage.getItem('token');
 
 
 const headers = () => ({
   'Content-Type': 'application/json',
-  Authorization: `Bearer ${token}`,
   'ngrok-skip-browser-warning': 'true'
 });
 
